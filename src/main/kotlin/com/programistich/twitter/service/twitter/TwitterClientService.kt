@@ -2,10 +2,7 @@ package com.programistich.twitter.service.twitter
 
 import com.programistich.twitter.common.TypeMessage
 import org.springframework.stereotype.Service
-import twitter4j.Tweet
-import twitter4j.Twitter
-import twitter4j.TwitterException
-import twitter4j.getLikedTweets
+import twitter4j.*
 
 @Service
 class TwitterClientService(
@@ -21,6 +18,7 @@ class TwitterClientService(
         }
     }
 
+
     override fun lastLikeTweetByUsername(username: String): Tweet {
         val user = twitter.showUser(username)
         return twitter.getLikedTweets(user.id).tweets[0]
@@ -28,7 +26,11 @@ class TwitterClientService(
 
     override fun parseTweet(tweetId: Long): TypeMessage? {
         val tweet = twitter.showStatus(tweetId)
-        val text = tweet.text
+        val urlEntity = tweet.quotedStatusPermalink
+        var text = tweet.text
+        if (urlEntity != null) {
+            text = text.replace(urlEntity.url, "")
+        }
         val medias = tweet.mediaEntities
         var typeMessage: TypeMessage? = null
         if (medias.isEmpty()) typeMessage = TypeMessage.TextMessage(text)
@@ -61,6 +63,30 @@ class TwitterClientService(
             }
         }
         return typeMessage
+    }
+
+    override fun getUser(username: String): User {
+        return twitter.showUser(username)
+    }
+
+    override fun nameUser(username: String): String {
+        return getUser(username).name
+    }
+
+    override fun urlUser(username: String): String {
+        return "https://twitter.com/$username"
+    }
+
+    override fun getTweetById(tweetId: Long): Tweet {
+        return twitter.getTweets(tweetId).tweets[0]
+    }
+
+    fun getAuthorForTweet(tweet: Tweet): String {
+        return twitter.showUser(tweet.authorId!!).screenName
+    }
+
+    fun getLinkOnTweet(tweetId: Long, username: String): String {
+        return "https://twitter.com/$username/status/$tweetId"
     }
 
 }

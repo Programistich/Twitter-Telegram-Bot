@@ -9,7 +9,7 @@ object Extensions {
         return this.message.chatId.toString()
     }
 
-    fun Update.textMessage(): String {
+    fun Update.textMessage(): String? {
         return this.message.text
     }
 

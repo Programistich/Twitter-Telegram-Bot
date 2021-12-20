@@ -7,4 +7,6 @@ interface DefaultTelegramCommandService {
     fun addTwitterUsernameToChat(chatId: String, username: String)
 
     fun lastLikeTweetByUsername(chatId: String, username: String)
+
+    fun pingChat(chatId: String)
 }

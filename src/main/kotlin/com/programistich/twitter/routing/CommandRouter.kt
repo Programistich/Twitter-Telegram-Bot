@@ -20,6 +20,9 @@ class CommandRouter(
                 val username = textMessage.replace("$command ", "")
                 telegramCommandService.addTwitterUsernameToChat(chatId, username)
             }
+            Command.PING ->{
+                telegramCommandService.pingChat(chatId)
+            }
             else -> {
 
             }

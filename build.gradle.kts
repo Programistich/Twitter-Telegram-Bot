@@ -14,6 +14,8 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
 	mavenCentral()
+	maven { setUrl("https://jitpack.io") }
+
 	maven {
 		setUrl("https://takke.github.io/maven")
 		content {
@@ -36,6 +38,10 @@ dependencies {
 	implementation("org.twitter4j:twitter4j-media-support:4.0.6")
 
 	implementation("org.telegram:telegrambots:5.5.0")
+
+
+	implementation("com.github.vbauer:yandex-translate-api:1.4.2")
+
 }
 
 tasks.withType<KotlinCompile> {

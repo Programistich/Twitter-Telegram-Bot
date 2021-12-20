@@ -86,5 +86,9 @@ class TelegramCommandService(
         telegramBotExecutorService.sendTweet(chatId, typeMessage, username, idLast, TypeByTweet.NEW)
     }
 
+    override fun pingChat(chatId: String) {
+        telegramBotExecutorService.sendTextMessage(chatId, "Живой я, живой, чо пингуешь")
+    }
+
 
 }

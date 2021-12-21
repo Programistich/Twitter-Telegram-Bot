@@ -16,9 +16,8 @@ class Router(
 
     override fun parseMessage(update: Update) {
         val textMessage = update.textMessage() ?: ""
-        val chatId = update.id()
         val command = update.getCommand(telegramBotConfiguration.username)
-        if (command != null) commandRouter.parseCommand(command, chatId, textMessage)
+        if (command != null) commandRouter.parseCommand(command, update, textMessage)
     }
 
 }

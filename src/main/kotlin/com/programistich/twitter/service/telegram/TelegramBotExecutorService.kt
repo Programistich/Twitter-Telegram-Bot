@@ -8,9 +8,11 @@ import com.programistich.twitter.service.twitter.TwitterClientService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.methods.send.*
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 
 @Service
 class TelegramBotExecutorService(
@@ -24,7 +26,8 @@ class TelegramBotExecutorService(
     override fun sendTweet(
         chatId: String,
         parsedTweet: TypeMessage?,
-        typeByTweet: TypeByTweet
+        typeByTweet: TypeByTweet,
+        replyToMessageId: Int?,
     ) {
         val additionalText = createAdditionalText(typeByTweet)
         when (parsedTweet) {
@@ -33,6 +36,7 @@ class TelegramBotExecutorService(
                 message.text = formatText(additionalText, parsedTweet.text)
                 message.chatId = chatId
                 message.parseMode = "html"
+                if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
                 message.disableWebPagePreview = true
                 bot.execute(message)
             }
@@ -42,6 +46,7 @@ class TelegramBotExecutorService(
                 message.caption = formatText(additionalText, parsedTweet.caption)
                 message.photo = InputFile(parsedTweet.url)
                 message.parseMode = "html"
+                if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
                 bot.execute(message)
             }
             is TypeMessage.AnimatedMessage -> {
@@ -49,6 +54,7 @@ class TelegramBotExecutorService(
                 message.chatId = chatId
                 message.animation = InputFile(parsedTweet.url)
                 message.parseMode = "html"
+                if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
                 message.caption = formatText(additionalText, parsedTweet.caption)
                 bot.execute(message)
             }
@@ -58,6 +64,7 @@ class TelegramBotExecutorService(
                 message.parseMode = "html"
                 message.caption = formatText(additionalText, parsedTweet.caption)
                 message.video = InputFile(parsedTweet.url)
+                if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
                 bot.execute(message)
             }
             is TypeMessage.ManyMediaMessage -> {
@@ -67,6 +74,7 @@ class TelegramBotExecutorService(
                 val listMedia = arrayListOf<InputMedia>()
                 var media = InputMediaPhoto()
                 media.media = medias[0]
+                if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
                 media.caption = formatText(additionalText, parsedTweet.caption)
                 listMedia.add(media)
                 for (i in 1 until medias.size) {
@@ -76,6 +84,7 @@ class TelegramBotExecutorService(
                 }
                 message.medias = listMedia
                 bot.execute(message)
+
             }
             else -> {
                 bot.execute(SendMessage(chatId, "Что-то пошло не так"))
@@ -83,8 +92,26 @@ class TelegramBotExecutorService(
         }
     }
 
-    override fun sendTextMessage(chatId: String, text: String) {
-        bot.execute(SendMessage(chatId, text))
+    override fun sendTextMessage(chatId: String, text: String, replyToMessageId: Int?) {
+        val message = SendMessage()
+        message.text = text
+        message.chatId = chatId
+        message.parseMode = "html"
+        if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
+        message.disableWebPagePreview = true
+        bot.execute(message)
+    }
+
+    override fun deleteMessage(chatId: String, messageId: Int) {
+        try {
+            val delete = DeleteMessage()
+            delete.chatId = chatId
+            delete.messageId = messageId
+            bot.execute(delete)
+        } catch (e: TelegramApiException) {
+            logger.info("Cant delete msg")
+        }
+
     }
 
     private fun formatText(additionalText: String, textTweet: String): String {
@@ -96,8 +123,10 @@ class TelegramBotExecutorService(
     private fun createAdditionalText(typeByTweet: TypeByTweet): String {
         when (typeByTweet) {
             is TypeByTweet.Get -> {
+                val nameUser = twitterClientService.nameUser(typeByTweet.username)
+                val linkUser = twitterClientService.urlUser(typeByTweet.username)
                 val link = typeByTweet.link
-                return "Твит по <a href=\"$link\">ссылке</a>:\n\n"
+                return "Твит от <a href=\"$linkUser\">$nameUser</a> по <a href=\"$link\">ссылке</a>\n\n"
             }
             is TypeByTweet.Like -> {
                 val nameUser = twitterClientService.nameUser(typeByTweet.username)

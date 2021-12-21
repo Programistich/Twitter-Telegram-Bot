@@ -31,7 +31,7 @@ class TranslateService : DefaultTranslateService {
 
     private fun translateText(text: String): Pair<String, String>? {
         val okHttpClient = OkHttpClient()
-        val urlFinal = "$URL?lang=ru&format=plain&key=$key"
+        val urlFinal = "$URL?lang=ru&format=html&key=$key"
         val body: RequestBody = FormBody.Builder().add("text", text).build()
         val request: Request = Request.Builder()
             .header("Content-Type", "application/x-www-form-urlencoded")

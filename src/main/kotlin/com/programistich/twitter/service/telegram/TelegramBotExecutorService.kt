@@ -24,46 +24,41 @@ class TelegramBotExecutorService(
     override fun sendTweet(
         chatId: String,
         parsedTweet: TypeMessage?,
-        username: String,
-        tweetId: Long,
         typeByTweet: TypeByTweet
     ) {
-        val additionalText = createAdditionalText(username, typeByTweet, tweetId)
+        val additionalText = createAdditionalText(typeByTweet)
         when (parsedTweet) {
             is TypeMessage.TextMessage -> {
                 val message = SendMessage()
-                message.text = additionalText + translateService.translate(parsedTweet.text)
+                message.text = formatText(additionalText, parsedTweet.text)
                 message.chatId = chatId
                 message.parseMode = "html"
+                message.disableWebPagePreview = true
                 bot.execute(message)
-                logger.info("Send text message $tweetId to $chatId")
             }
             is TypeMessage.PhotoMessage -> {
                 val message = SendPhoto()
                 message.chatId = chatId
-                message.caption = additionalText + translateService.translate(parsedTweet.caption)
+                message.caption = formatText(additionalText, parsedTweet.caption)
                 message.photo = InputFile(parsedTweet.url)
                 message.parseMode = "html"
                 bot.execute(message)
-                logger.info("Send photo message $tweetId to $chatId")
             }
             is TypeMessage.AnimatedMessage -> {
                 val message = SendAnimation()
                 message.chatId = chatId
                 message.animation = InputFile(parsedTweet.url)
                 message.parseMode = "html"
-                message.caption = additionalText + translateService.translate(parsedTweet.caption)
+                message.caption = formatText(additionalText, parsedTweet.caption)
                 bot.execute(message)
-                logger.info("Send video message $tweetId to $chatId")
             }
             is TypeMessage.VideoMessage -> {
                 val message = SendVideo()
                 message.chatId = chatId
                 message.parseMode = "html"
-                message.caption = additionalText + translateService.translate(parsedTweet.caption)
+                message.caption = formatText(additionalText, parsedTweet.caption)
                 message.video = InputFile(parsedTweet.url)
                 bot.execute(message)
-                logger.info("Send video message $tweetId to $chatId")
             }
             is TypeMessage.ManyMediaMessage -> {
                 val medias = parsedTweet.urlsMedia
@@ -72,7 +67,7 @@ class TelegramBotExecutorService(
                 val listMedia = arrayListOf<InputMedia>()
                 var media = InputMediaPhoto()
                 media.media = medias[0]
-                media.caption = additionalText + translateService.translate(parsedTweet.caption)
+                media.caption = formatText(additionalText, parsedTweet.caption)
                 listMedia.add(media)
                 for (i in 1 until medias.size) {
                     media = InputMediaPhoto()
@@ -81,11 +76,9 @@ class TelegramBotExecutorService(
                 }
                 message.medias = listMedia
                 bot.execute(message)
-                logger.info("Send many media message $tweetId to $chatId")
             }
             else -> {
                 bot.execute(SendMessage(chatId, "Что-то пошло не так"))
-                logger.info("Parse tweet null $tweetId to $chatId")
             }
         }
     }
@@ -94,20 +87,29 @@ class TelegramBotExecutorService(
         bot.execute(SendMessage(chatId, text))
     }
 
-    private fun createAdditionalText(username: String, typeByTweet: TypeByTweet, tweetId: Long): String {
-        val nameUser = twitterClientService.nameUser(username)
-        val linkUser = twitterClientService.urlUser(username)
-        val tweet = twitterClientService.getTweetById(tweetId)
-        val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
-        val tweetLink = twitterClientService.getLinkOnTweet(tweetId, tweetAuthor)
-        val userCollect = "<a href=\"$linkUser\">$nameUser</a>"
-        var additionalText = ""
-        if (typeByTweet == TypeByTweet.LIKE) {
-            additionalText = "Новый <a href=\"$tweetLink\">лайк</a> от $userCollect\n\n"
+    private fun formatText(additionalText: String, textTweet: String): String {
+        val translateText = translateService.translate(textTweet)
+        val formatUsername = twitterClientService.usernameToLink(translateText)
+        return additionalText + formatUsername
+    }
+
+    private fun createAdditionalText(typeByTweet: TypeByTweet): String {
+        when (typeByTweet) {
+            is TypeByTweet.Get -> {
+                val link = typeByTweet.link
+                return "Твит по <a href=\"$link\">ссылке</a>:\n\n"
+            }
+            is TypeByTweet.Like -> {
+                val nameUser = twitterClientService.nameUser(typeByTweet.username)
+                val linkUser = twitterClientService.urlUser(typeByTweet.username)
+                val tweet = twitterClientService.getTweetById(typeByTweet.tweetId)
+                val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
+                val tweetLink = twitterClientService.getLinkOnTweet(typeByTweet.tweetId, tweetAuthor)
+                val userCollect = "<a href=\"$linkUser\">$nameUser</a>"
+                if (typeByTweet.last) return "Последний <a href=\"$tweetLink\">лайк</a> от $userCollect\n\n"
+                else return "Новый <a href=\"$tweetLink\">лайк</a> от $userCollect\n\n"
+            }
         }
-        if (typeByTweet == TypeByTweet.NEW) {
-            additionalText = "Последний <a href=\"$tweetLink\">лайк</a> от $userCollect\n\n"
-        }
-        return additionalText
+
     }
 }

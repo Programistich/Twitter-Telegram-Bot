@@ -5,7 +5,7 @@ import com.programistich.twitter.common.TypeMessage
 
 interface DefaultTelegramBotExecutorService{
 
-    fun sendTweet(chatId: String, parsedTweet: TypeMessage?, username: String, tweetId: Long, typeByTweet: TypeByTweet)
+    fun sendTweet(chatId: String, parsedTweet: TypeMessage?, typeByTweet: TypeByTweet)
 
     fun sendTextMessage(chatId: String, text: String)
 }

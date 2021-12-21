@@ -83,11 +83,36 @@ class TelegramCommandService(
             return
         }
         val typeMessage = twitterClientService.parseTweet(idLast)
-        telegramBotExecutorService.sendTweet(chatId, typeMessage, username, idLast, TypeByTweet.NEW)
+        val typeTweet = TypeByTweet.Like(username, idLast, true)
+        telegramBotExecutorService.sendTweet(chatId, typeMessage, typeTweet)
+        logger.info("Send message $idLast to $chatId")
     }
 
     override fun pingChat(chatId: String) {
         telegramBotExecutorService.sendTextMessage(chatId, "Живой я, живой, чо пингуешь")
+    }
+
+    // https://twitter.com/TOSHIK113/status/1472956899146543105?s=20
+    // TOSHIK113/status/1472956899146543105?s=20
+    // 1472956899146543105?s=20
+    override fun getTweet(chatId: String, link: String) {
+        val formatLink = link.replace("https://twitter.com/", "").split("/")
+        val username = formatLink[0]
+        val idTmp = formatLink[2]
+        var result = ""
+        for (char in idTmp) {
+            if (!char.isDigit()) break
+            else result += char
+        }
+        val id = result.toLong()
+        try {
+            logger.info("get post with id = $id")
+            val typeMessage = twitterClientService.parseTweet(id)
+            val typeTweet = TypeByTweet.Get(link)
+            telegramBotExecutorService.sendTweet(chatId, typeMessage, typeTweet)
+        } catch (e: Exception) {
+            telegramBotExecutorService.sendTextMessage(chatId, "Что-то пошло не так")
+        }
     }
 
 

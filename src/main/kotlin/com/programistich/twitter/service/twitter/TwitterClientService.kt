@@ -31,10 +31,15 @@ class TwitterClientService(
         if (urlEntity != null) {
             text = text.replace(urlEntity.url, "")
         }
+        //text = usernameToLink(text)
         val medias = tweet.mediaEntities
         var typeMessage: TypeMessage? = null
         if (medias.isEmpty()) typeMessage = TypeMessage.TextMessage(text)
         else {
+            medias.toList().forEach {
+                val link = it.url
+                text = text.replace(link, "")
+            }
             if (medias.size == 1) {
                 when (medias[0].type) {
                     "photo" -> typeMessage = TypeMessage.PhotoMessage(medias[0].mediaURL, text)
@@ -63,6 +68,21 @@ class TwitterClientService(
             }
         }
         return typeMessage
+    }
+
+    fun usernameToLink(text: String): String {
+        val result = arrayListOf<String>()
+        text.split(" ").toList().map {
+            if (it.startsWith("@") && existUsernameInTwitter(it)) {
+                val url = urlUser(it)
+                result.add("<a href=\"$url\">$it</a>")
+            } else result.add(it)
+        }
+        var resultString = ""
+        result.forEach {
+            resultString += "$it "
+        }
+        return resultString
     }
 
     override fun getUser(username: String): User {

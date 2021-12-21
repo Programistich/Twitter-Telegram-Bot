@@ -15,7 +15,6 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 repositories {
 	mavenCentral()
 	maven { setUrl("https://jitpack.io") }
-
 	maven {
 		setUrl("https://takke.github.io/maven")
 		content {
@@ -32,16 +31,13 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-	implementation("io.github.redouane59.twitter:twittered:2.12")
 	implementation("jp.takke.twitter4j-v2:twitter4j-v2-support:1.0.3")
 	implementation("org.twitter4j:twitter4j-core:4.0.7")
 	implementation("org.twitter4j:twitter4j-media-support:4.0.6")
 
 	implementation("org.telegram:telegrambots:5.5.0")
 
-
-	implementation("com.github.vbauer:yandex-translate-api:1.4.2")
-
+	implementation("com.squareup.okhttp:okhttp:2.7.5")
 }
 
 tasks.withType<KotlinCompile> {

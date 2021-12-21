@@ -9,4 +9,6 @@ interface DefaultTelegramCommandService {
     fun lastLikeTweetByUsername(chatId: String, username: String)
 
     fun pingChat(chatId: String)
+
+    fun getTweet(chatId: String, link: String)
 }

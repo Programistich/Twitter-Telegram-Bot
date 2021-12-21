@@ -22,12 +22,13 @@ class TwitterCronJob(
 
     private val logger = LoggerFactory.getLogger(TwitterCronJob::class.java)
 
-    @Scheduled(fixedDelay = 300_00)
+    @Scheduled(fixedDelay = 1000_00)
     fun updateTwitterLikesForAllUsernames() {
         logger.info("Start updater likes")
         val usernames = databaseTwitterUserService.getAllUsername()
         usernames.forEach {
             updateTwitterLikeForUsername(it)
+            //Thread.sleep(10_000)
         }
         logger.info("End updater likes")
     }
@@ -56,7 +57,8 @@ class TwitterCronJob(
             val chats = databaseTelegramChatService.getChatsByUsername(username)
             chats.map {
                 logger.info("Send tweet to $it")
-                telegramBotExecutorService.sendTweet(it, parsedTweet, username, tweetInTwitter.id, TypeByTweet.LIKE)
+                val typeTweet = TypeByTweet.Like(username, tweetInTwitter.id)
+                telegramBotExecutorService.sendTweet(it, parsedTweet, typeTweet)
             }
         }
     }

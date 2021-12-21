@@ -30,6 +30,7 @@ class CommandRouter(
                     array[array.size - 1].trimStart(),
                     messageId
                 )
+                telegramBotExecutorService.deleteMessage(chatId, messageId)
                 //update.message.chat.
             }
             Command.PING -> {
@@ -39,6 +40,7 @@ class CommandRouter(
                 val array = message.split(" ")
                 if (array.size == 1) telegramBotExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
                 else telegramCommandService.getTweet(chatId, array[array.size - 1].trimStart(), messageId)
+                telegramBotExecutorService.deleteMessage(chatId, messageId)
             }
             else -> {
 

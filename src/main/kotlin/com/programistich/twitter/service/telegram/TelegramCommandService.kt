@@ -66,7 +66,11 @@ class TelegramCommandService(
             TwitterUser(username)
         }
         if (twitterUser == null) {
-            telegramBotExecutorService.sendTextMessage(chatId, "Что-то пошло не так в TelegramCommandService", messageId)
+            telegramBotExecutorService.sendTextMessage(
+                chatId,
+                "Что-то пошло не так в TelegramCommandService",
+                messageId
+            )
             logger.info("Twitter user null")
             return
         }
@@ -98,16 +102,16 @@ class TelegramCommandService(
     // TOSHIK113/status/1472956899146543105?s=20
     // 1472956899146543105?s=20
     override fun getTweet(chatId: String, link: String, messageId: Int) {
-        val formatLink = link.replace("https://twitter.com/", "").split("/")
-        val username = formatLink[0]
-        val idTmp = formatLink[2]
-        var result = ""
-        for (char in idTmp) {
-            if (!char.isDigit()) break
-            else result += char
-        }
-        val id = result.toLong()
         try {
+            val formatLink = link.replace("https://twitter.com/", "").split("/")
+            val username = formatLink[0]
+            val idTmp = formatLink[2]
+            var result = ""
+            for (char in idTmp) {
+                if (!char.isDigit()) break
+                else result += char
+            }
+            val id = result.toLong()
             logger.info("get post with id = $id")
             val typeMessage = twitterClientService.parseTweet(id)
             val typeTweet = TypeByTweet.Get(username, link)
@@ -124,6 +128,13 @@ class TelegramCommandService(
             telegramBotExecutorService.sendTextMessage(
                 chatId,
                 "Что-то пошло не так и Твиттер что-то не так сделаль",
+                messageId
+            )
+        } catch (e: IndexOutOfBoundsException){
+            logger.info("Error " + e.message)
+            telegramBotExecutorService.sendTextMessage(
+                chatId,
+                "Что-то пошло не так, точно правильная ссылка?",
                 messageId
             )
         }

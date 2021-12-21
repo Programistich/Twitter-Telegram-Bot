@@ -27,11 +27,10 @@ class CommandRouter(
                 if (array.size == 1) telegramBotExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
                 else telegramCommandService.addTwitterUsernameToChat(
                     chatId,
-                    array[array.size - 1].trimStart(),
+                    array[array.lastIndex].trimStart(),
                     messageId
                 )
                 telegramBotExecutorService.deleteMessage(chatId, messageId)
-                //update.message.chat.
             }
             Command.PING -> {
                 telegramCommandService.pingChat(chatId)
@@ -39,7 +38,7 @@ class CommandRouter(
             Command.GET -> {
                 val array = message.split(" ")
                 if (array.size == 1) telegramBotExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
-                else telegramCommandService.getTweet(chatId, array[array.size - 1].trimStart(), messageId)
+                else telegramCommandService.getTweet(chatId, array[array.lastIndex].trimStart(), messageId)
                 telegramBotExecutorService.deleteMessage(chatId, messageId)
             }
             else -> {

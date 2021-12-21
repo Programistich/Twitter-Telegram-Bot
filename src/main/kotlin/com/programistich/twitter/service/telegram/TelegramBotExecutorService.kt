@@ -88,7 +88,7 @@ class TelegramBotExecutorService(
     }
 
     private fun formatText(additionalText: String, textTweet: String): String {
-        val translateText = translateService.translate(textTweet)
+        val translateText = translateService.translate(textTweet.trim())
         val formatUsername = twitterClientService.usernameToLink(translateText)
         return additionalText + formatUsername
     }

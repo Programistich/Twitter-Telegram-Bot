@@ -37,7 +37,7 @@ dependencies {
 
 	implementation("org.telegram:telegrambots:5.5.0")
 
-	implementation("com.squareup.okhttp:okhttp:2.7.5")
+	implementation("com.squareup.okhttp3:okhttp:4.9.3")
 }
 
 tasks.withType<KotlinCompile> {

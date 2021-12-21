@@ -9,6 +9,8 @@ import com.programistich.twitter.service.twitter.TwitterClientService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import twitter4j.TwitterException
 
 @Service
 @Transactional
@@ -110,8 +112,12 @@ class TelegramCommandService(
             val typeMessage = twitterClientService.parseTweet(id)
             val typeTweet = TypeByTweet.Get(link)
             telegramBotExecutorService.sendTweet(chatId, typeMessage, typeTweet)
-        } catch (e: Exception) {
-            telegramBotExecutorService.sendTextMessage(chatId, "Что-то пошло не так")
+        } catch (e: TelegramApiException) {
+            logger.info("Error " + e.message)
+            telegramBotExecutorService.sendTextMessage(chatId, "Что-то пошло не так и Дуров не дает загрузить")
+        } catch (e: TwitterException) {
+            logger.info("Error " + e.message)
+            telegramBotExecutorService.sendTextMessage(chatId, "Что-то пошло не так и Твиттер что-то не так сделаль")
         }
     }
 

@@ -75,7 +75,7 @@ class TelegramBotExecutorService(
                 var media = InputMediaPhoto()
                 media.media = medias[0]
                 if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-                media.caption = formatText(additionalText, parsedTweet.caption)
+                media.caption = formatText(createAdditionalTextForMany(typeByTweet), parsedTweet.caption)
                 listMedia.add(media)
                 for (i in 1 until medias.size) {
                     media = InputMediaPhoto()
@@ -140,6 +140,29 @@ class TelegramBotExecutorService(
                 else return "Новый <a href=\"$tweetLink\">лайк</a> от $userCollect\n\n"
             }
         }
+
+    }
+
+    private fun createAdditionalTextForMany(typeByTweet: TypeByTweet): String {
+        when (typeByTweet) {
+            is TypeByTweet.Get -> {
+                val nameUser = twitterClientService.nameUser(typeByTweet.username)
+                val author = typeByTweet.author
+                val link = typeByTweet.link
+                return "Твит от $nameUser($link) by $author\n\n"
+            }
+            is TypeByTweet.Like -> {
+                val nameUser = twitterClientService.nameUser(typeByTweet.username)
+                val linkUser = twitterClientService.urlUser(typeByTweet.username)
+                val tweet = twitterClientService.getTweetById(typeByTweet.tweetId)
+                val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
+                val tweetLink = twitterClientService.getLinkOnTweet(typeByTweet.tweetId, tweetAuthor)
+                val userCollect = "<a href=\"$linkUser\">$nameUser</a>"
+                if (typeByTweet.last) return "Последний лайк($tweetLink) от $nameUser($linkUser)\n\n"
+                else return "Новый лайк($tweetLink) от $nameUser($linkUser)\n\n"
+            }
+        }
+
 
     }
 }

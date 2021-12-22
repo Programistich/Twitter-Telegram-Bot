@@ -20,22 +20,21 @@ class TranslateService : DefaultTranslateService {
 
     override fun translate(text: String): String {
         if (text.isEmpty()) return ""
+        val beforeTranslate = beforeTranslate(text)
 
         var lang = detectLanguage(text)
         if (lang == null) lang = "en"
-        val pairTranslated = translateText(setupText(text), lang) ?: return text
+        val pairTranslated = translateText(beforeTranslate, lang) ?: return text
 
-        var translatedText: String = pairTranslated.first
-        println(translatedText)
-        translatedText = replaceSome(translatedText)
-        translatedText = deleteUnicode(translatedText)
+        val translatedText: String = pairTranslated.first
+        val afterTranslate = afterTranslate(translatedText)
 
         val langs = pairTranslated.second.split("-")
         val firstLang = langs[0].uppercase()
         val secondLang = langs[1].uppercase()
 
-        if (firstLang == secondLang) return translatedText
-        return "[$firstLang]\n$text\n\n[$secondLang]\n$translatedText"
+        if (firstLang == secondLang) return text
+        return "[$firstLang]: $beforeTranslate\n\n[$secondLang]: $afterTranslate"
     }
 
     private fun translateText(text: String, lang: String): Pair<String, String>? {
@@ -82,22 +81,44 @@ class TranslateService : DefaultTranslateService {
         return null
     }
 
-    private fun replaceSome(text: String): String {
+
+    private fun beforeTranslate(text: String): String {
+        var result: String = text
+        val firstChar = text[0]
+        if (firstChar == '.') result = text.drop(1)
+        result = result.replace("Irony Man", "Железный человек")
+        return result
+    }
+
+
+    private fun afterTranslate(text: String): String {
+        val refactorSymbol = refactorTranslate(text)
+        val deleteUnicode = deleteUnicode(refactorSymbol)
+        val replace = replace(deleteUnicode)
+        return replace
+    }
+
+    private fun replace(text: String): String {
+        return text
+            .replace("@элон Маск", "@elonmusk")
+    }
+
+    private fun refactorTranslate(text: String): String {
         return text
             .replace("\\n", "\n")
             .replace("[\"", "")
             .replace("\"]", "")
             .replace("\\\"", "")
+
     }
 
-    private fun setupText(text: String): String {
-        return text
-            .replace("“", "\\“")
-            .replace("”", "\\”")
-            .replace("—", "\\—")
-    }
 
     private fun deleteUnicode(text: String): String {
         return text
+            .replace("\\u201c", "“")
+            .replace("\\u201d", "”")
+            .replace("\\u2014", "—")
     }
+
+
 }

@@ -9,6 +9,7 @@ import com.programistich.twitter.service.twitter.TwitterClientService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import twitter4j.TwitterException
 
@@ -101,7 +102,10 @@ class TelegramCommandService(
     // https://twitter.com/TOSHIK113/status/1472956899146543105?s=20
     // TOSHIK113/status/1472956899146543105?s=20
     // 1472956899146543105?s=20
-    override fun getTweet(chatId: String, link: String, messageId: Int) {
+    override fun getTweet(message: Message, link: String) {
+        val chatId = message.chatId.toString()
+        val author = message.from.firstName
+        val messageId = message.messageId
         try {
             val formatLink = link.replace("https://twitter.com/", "").split("/")
             val username = formatLink[0]
@@ -114,7 +118,7 @@ class TelegramCommandService(
             val id = result.toLong()
             logger.info("get post with id = $id")
             val typeMessage = twitterClientService.parseTweet(id)
-            val typeTweet = TypeByTweet.Get(username, link)
+            val typeTweet = TypeByTweet.Get(username, link, author)
             telegramBotExecutorService.sendTweet(chatId, typeMessage, typeTweet)
         } catch (e: TelegramApiException) {
             logger.info("Error " + e.message)
@@ -130,7 +134,7 @@ class TelegramCommandService(
                 "Что-то пошло не так и Твиттер что-то не так сделаль",
                 messageId
             )
-        } catch (e: IndexOutOfBoundsException){
+        } catch (e: IndexOutOfBoundsException) {
             logger.info("Error " + e.message)
             telegramBotExecutorService.sendTextMessage(
                 chatId,

@@ -1,5 +1,7 @@
 package com.programistich.twitter.service.telegram
 
+import org.telegram.telegrambots.meta.api.objects.Message
+
 interface DefaultTelegramCommandService {
 
     fun registerChat(chatId: String)
@@ -10,5 +12,5 @@ interface DefaultTelegramCommandService {
 
     fun pingChat(chatId: String)
 
-    fun getTweet(chatId: String, link: String, messageId: Int)
+    fun getTweet(message: Message, link: String)
 }

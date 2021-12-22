@@ -125,8 +125,9 @@ class TelegramBotExecutorService(
             is TypeByTweet.Get -> {
                 val nameUser = twitterClientService.nameUser(typeByTweet.username)
                 val linkUser = twitterClientService.urlUser(typeByTweet.username)
+                val author = typeByTweet.author
                 val link = typeByTweet.link
-                return "Твит от <a href=\"$linkUser\">$nameUser</a> по <a href=\"$link\">ссылке</a>\n\n"
+                return "Твит от <a href=\"$linkUser\">$nameUser</a> по <a href=\"$link\">ссылке</a> by $author\n\n"
             }
             is TypeByTweet.Like -> {
                 val nameUser = twitterClientService.nameUser(typeByTweet.username)

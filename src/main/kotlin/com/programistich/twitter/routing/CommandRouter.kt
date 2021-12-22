@@ -38,7 +38,7 @@ class CommandRouter(
             Command.GET -> {
                 val array = message.split(" ")
                 if (array.size == 1) telegramBotExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
-                else telegramCommandService.getTweet(chatId, array[array.lastIndex].trimStart(), messageId)
+                else telegramCommandService.getTweet(update.message, array[array.lastIndex].trimStart())
                 telegramBotExecutorService.deleteMessage(chatId, messageId)
             }
             else -> {

@@ -22,13 +22,18 @@ class TranslateService : DefaultTranslateService {
         if (text.isEmpty()) return ""
 
         var lang = detectLanguage(text)
-        if(lang == null) lang = "en"
-        val pairTranslated = translateText(text, lang) ?: return text
+        if (lang == null) lang = "en"
+        val pairTranslated = translateText(setupText(text), lang) ?: return text
 
-        val translatedText = pairTranslated.first
+        var translatedText: String = pairTranslated.first
+        println(translatedText)
+        translatedText = replaceSome(translatedText)
+        translatedText = deleteUnicode(translatedText)
+
         val langs = pairTranslated.second.split("-")
         val firstLang = langs[0].uppercase()
         val secondLang = langs[1].uppercase()
+
         if (firstLang == secondLang) return translatedText
         return "[$firstLang]\n$text\n\n[$secondLang]\n$translatedText"
     }
@@ -46,9 +51,9 @@ class TranslateService : DefaultTranslateService {
             val response = okHttpClient.newCall(request).execute()
             val responseData = response.body!!.string()
             val jsonObject = JSONObject(responseData)
-            val resultText = jsonObject["text"].toString().replace("\\n", "\n").replace("[\"", "").replace("\"]", "")
-                .replace("\\\"", "")
-            Pair(resultText, jsonObject["lang"].toString())
+            val resultText = jsonObject["text"].toString()
+            val langs = jsonObject["lang"].toString()
+            Pair(resultText, langs)
         } catch (e: IOException) {
             e.printStackTrace()
             null
@@ -75,5 +80,24 @@ class TranslateService : DefaultTranslateService {
             e.printStackTrace()
         }
         return null
+    }
+
+    private fun replaceSome(text: String): String {
+        return text
+            .replace("\\n", "\n")
+            .replace("[\"", "")
+            .replace("\"]", "")
+            .replace("\\\"", "")
+    }
+
+    private fun setupText(text: String): String {
+        return text
+            .replace("“", "\\“")
+            .replace("”", "\\”")
+            .replace("—", "\\—")
+    }
+
+    private fun deleteUnicode(text: String): String {
+        return text
     }
 }

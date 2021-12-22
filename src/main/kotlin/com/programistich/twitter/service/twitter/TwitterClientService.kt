@@ -49,7 +49,15 @@ class TwitterClientService(
                         }.reversed()[0].url
                         typeMessage = TypeMessage.VideoMessage(urlVideo, text)
                     }
-                    "animated_gif" -> typeMessage = TypeMessage.AnimatedMessage(medias[0].mediaURL, text)
+                    "animated_gif" -> {
+                        if(medias[0].videoVariants.isNotEmpty()){
+                            val urlVideo = medias[0].videoVariants.toList().sortedBy {
+                                it.bitrate
+                            }.reversed()[0].url
+                            typeMessage = TypeMessage.VideoMessage(urlVideo, text)
+                        }
+                        else typeMessage = TypeMessage.AnimatedMessage(medias[0].mediaURL, text)
+                    }
                 }
             } else {
                 val url = arrayListOf<String>()

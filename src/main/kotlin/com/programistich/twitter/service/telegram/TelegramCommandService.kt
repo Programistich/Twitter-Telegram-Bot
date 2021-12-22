@@ -144,5 +144,24 @@ class TelegramCommandService(
         }
     }
 
+    override fun getRandomPicture(chatId: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPictureByText(message: Message?, query: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun donate(chatId: String) {
+        telegramBotExecutorService.sendTextMessage(
+            chatId,
+            "Есть несколько вариантов поддержки:\n<a href=\"https://send.monobank.ua/jar/9B7DzKsjk7\">Банка монобанка</a>\nКарта Моно <pre>4441114440821211</pre>\nКарта YooMoney <pre>4048025000163488</pre>\nКрипта <pre>0xf6A2255f333EF47845BaCfD26A0bEaaD296B9019</pre>"
+        )
+        telegramBotExecutorService.sendStickerMessage(
+            chatId,
+            "CAACAgUAAxkBAAIC42HDbkEHhXo4h-g1rQoFfxqdYVjeAAIKAQACdflYFOEIo5rse7wLIwQ"
+        )
+    }
+
 
 }

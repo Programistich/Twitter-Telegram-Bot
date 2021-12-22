@@ -15,4 +15,5 @@ interface DefaultTelegramBotExecutorService {
     fun sendTextMessage(chatId: String, text: String, replyToMessageId: Int? = null)
 
     fun deleteMessage(chatId: String, messageId: Int)
+    fun sendStickerMessage(chatId: String, stickerId: String)
 }

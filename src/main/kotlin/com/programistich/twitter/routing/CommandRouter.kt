@@ -16,14 +16,14 @@ class CommandRouter(
 
     override fun parseCommand(typeCommand: Command, update: Update, textMessage: String) {
         val chatId = update.id()
-        val message = update.message.text
+        val textMessage = update.message.text
         val messageId = update.message.messageId
         when (typeCommand) {
             Command.START -> {
                 telegramCommandService.registerChat(chatId)
             }
             Command.NEW -> {
-                val array = message.split(" ")
+                val array = textMessage.split(" ")
                 if (array.size == 1) telegramBotExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
                 else telegramCommandService.addTwitterUsernameToChat(
                     chatId,
@@ -35,8 +35,18 @@ class CommandRouter(
             Command.PING -> {
                 telegramCommandService.pingChat(chatId)
             }
+            Command.PICTURE -> {
+                val array = textMessage.split(" ")
+                if (array.size == 1) telegramCommandService.getRandomPicture(chatId)
+                else telegramCommandService.getPictureByText(update.message, array[array.lastIndex].trimStart())
+                telegramBotExecutorService.deleteMessage(chatId, messageId)
+            }
+            Command.DONATE -> {
+                telegramCommandService.donate(chatId)
+                telegramBotExecutorService.deleteMessage(chatId, messageId)
+            }
             Command.GET -> {
-                val array = message.split(" ")
+                val array = textMessage.split(" ")
                 if (array.size == 1) telegramBotExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
                 else telegramCommandService.getTweet(update.message, array[array.lastIndex].trimStart())
                 telegramBotExecutorService.deleteMessage(chatId, messageId)

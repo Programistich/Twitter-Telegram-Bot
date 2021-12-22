@@ -102,6 +102,13 @@ class TelegramBotExecutorService(
         bot.execute(message)
     }
 
+    override fun sendStickerMessage(chatId: String, stickerId: String) {
+        val message = SendSticker()
+        message.chatId = chatId
+        message.sticker = InputFile(stickerId)
+        bot.execute(message)
+    }
+
     override fun deleteMessage(chatId: String, messageId: Int) {
         try {
             val delete = DeleteMessage()
@@ -121,45 +128,41 @@ class TelegramBotExecutorService(
     }
 
     private fun createAdditionalText(typeByTweet: TypeByTweet): String {
-        when (typeByTweet) {
+        return when (typeByTweet) {
             is TypeByTweet.Get -> {
                 val nameUser = twitterClientService.nameUser(typeByTweet.username)
                 val linkUser = twitterClientService.urlUser(typeByTweet.username)
                 val author = typeByTweet.author
                 val link = typeByTweet.link
-                return "Твит от <a href=\"$linkUser\">$nameUser</a> по <a href=\"$link\">ссылке</a> by $author\n\n"
+                "Твит по <a href=\"$link\">ссылке</a> от <a href=\"$linkUser\">$nameUser</a> by $author\n\n"
             }
             is TypeByTweet.Like -> {
                 val nameUser = twitterClientService.nameUser(typeByTweet.username)
                 val linkUser = twitterClientService.urlUser(typeByTweet.username)
                 val tweet = twitterClientService.getTweetById(typeByTweet.tweetId)
                 val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
+                val tweetAuthorLink = twitterClientService.urlUser(tweetAuthor)
                 val tweetLink = twitterClientService.getLinkOnTweet(typeByTweet.tweetId, tweetAuthor)
-                val userCollect = "<a href=\"$linkUser\">$nameUser</a>"
-                if (typeByTweet.last) return "Последний <a href=\"$tweetLink\">лайк</a> от $userCollect\n\n"
-                else return "Новый <a href=\"$tweetLink\">лайк</a> от $userCollect\n\n"
+                if (typeByTweet.last) "Последний лайк <a href=\"$linkUser\">$nameUser</a> на <a href=\"$tweetLink\">твит</a> от <a href=\"$tweetAuthorLink\">$tweetAuthor</a>\n\n"
+                else "Лайк <a href=\"$linkUser\">$nameUser</a> на <a href=\"$tweetLink\">твит</a> от <a href=\"$tweetAuthorLink\">$tweetAuthor</a>\n\n"
             }
         }
 
     }
 
     private fun createAdditionalTextForMany(typeByTweet: TypeByTweet): String {
-        when (typeByTweet) {
+        return when (typeByTweet) {
             is TypeByTweet.Get -> {
                 val nameUser = twitterClientService.nameUser(typeByTweet.username)
                 val author = typeByTweet.author
                 val link = typeByTweet.link
-                return "Твит от $nameUser($link) by $author\n\n"
+                "Твит от $nameUser($link) by $author\n\n"
             }
             is TypeByTweet.Like -> {
-                val nameUser = twitterClientService.nameUser(typeByTweet.username)
-                val linkUser = twitterClientService.urlUser(typeByTweet.username)
                 val tweet = twitterClientService.getTweetById(typeByTweet.tweetId)
                 val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
-                val tweetLink = twitterClientService.getLinkOnTweet(typeByTweet.tweetId, tweetAuthor)
-                val userCollect = "<a href=\"$linkUser\">$nameUser</a>"
-                if (typeByTweet.last) return "Последний лайк($tweetLink) от $nameUser($linkUser)\n\n"
-                else return "Новый лайк($tweetLink) от $nameUser($linkUser)\n\n"
+                if (typeByTweet.last) "Последний лайк $tweetAuthor на твит(tweetLink) от $tweetAuthor\n\n"
+                else "Лайк $tweetAuthor на твит(tweetLink) от $tweetAuthor\n\n"
             }
         }
 

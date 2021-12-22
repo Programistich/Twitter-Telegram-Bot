@@ -13,4 +13,10 @@ interface DefaultTelegramCommandService {
     fun pingChat(chatId: String)
 
     fun getTweet(message: Message, link: String)
+
+    fun getRandomPicture(chatId: String)
+
+    fun getPictureByText(message: Message?, query: String)
+
+    fun donate(chatId: String)
 }

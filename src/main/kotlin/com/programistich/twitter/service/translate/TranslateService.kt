@@ -86,8 +86,9 @@ class TranslateService : DefaultTranslateService {
         var result: String = text
         val firstChar = text[0]
         if (firstChar == '.') result = text.drop(1)
-        result = result.replace("Irony Man", "Железный человек")
         return result
+            .replace("Irony Man", "Железный человек")
+            .replace("Elon's", "Илона")
     }
 
 
@@ -101,6 +102,9 @@ class TranslateService : DefaultTranslateService {
     private fun replace(text: String): String {
         return text
             .replace("@элон Маск", "@elonmusk")
+            .replace("@фредерик ламберт", "@fredericlambert")
+            .replace("@ элон Маск", "@elonmusk")
+            .replace("@Джорджлукасильм", "@GeorgeLucasILM")
     }
 
     private fun refactorTranslate(text: String): String {
@@ -118,6 +122,8 @@ class TranslateService : DefaultTranslateService {
             .replace("\\u201c", "“")
             .replace("\\u201d", "”")
             .replace("\\u2014", "—")
+            .replace("\\u2013", "–")
+            .replace("\\u2026", "...")
     }
 
 

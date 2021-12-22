@@ -6,6 +6,8 @@ enum class Command(val command: String) {
     LAST_LIKE("/last_like"),
     LAST_TWEET("/last_tweet"),
     GET("/get"),
+    PICTURE("/pic"),
+    DONATE("/donate"),
     PING("/ping");
 
     companion object {

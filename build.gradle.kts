@@ -39,6 +39,9 @@ dependencies {
 	implementation("org.telegram:telegrambots-meta:5.5.0")
 
 	implementation("com.squareup.okhttp3:okhttp:4.9.3")
+
+	implementation("com.flickr4java:flickr4java:3.0.6")
+
 }
 
 tasks.withType<KotlinCompile> {

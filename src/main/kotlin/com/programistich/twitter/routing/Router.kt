@@ -42,16 +42,20 @@ class Router(
 
     override fun parseTextMessage(message: Message) {
         val twitterLink = existTwitterLink(message.text)
-        if (twitterLink) {
-            telegramCommandService.getTweetCommand(message, message.text)
+        if (twitterLink != null) {
+            telegramCommandService.getTweetCommand(message, twitterLink)
         }
     }
 
-    private fun existTwitterLink(message: String): Boolean {
-        return try {
-            message.startsWith("https://twitter.com/")
+    private fun existTwitterLink(message: String): String? {
+        try {
+            if (message.startsWith("https://twitter.com/")) return message
+            val messageArray = message.split(" ")
+            val link = messageArray[messageArray.lastIndex]
+            return if (link.startsWith("https://twitter.com/")) link
+            else null
         } catch (e: Exception) {
-            false
+            return null
         }
     }
 

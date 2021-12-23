@@ -18,26 +18,26 @@ class TranslateService : DefaultTranslateService {
     @Value("\${yandex.translate.api}")
     private lateinit var key: String
 
-    override fun translate(text: String): String {
+    override fun translateText(text: String): String {
         if (text.isEmpty()) return ""
-        val beforeTranslate = beforeTranslate(text)
-
-        var lang = detectLanguage(text)
+        var lang = requestDetectLanguage(text)
         if (lang == null) lang = "en"
-        val pairTranslated = translateText(beforeTranslate, lang) ?: return text
 
-        val translatedText: String = pairTranslated.first
-        val afterTranslate = afterTranslate(translatedText)
+        val beforeText = formatTextBeforeTranslate(text)
+        val translatedPair = requestTranslate(beforeText, lang) ?: return text
 
-        val langs = pairTranslated.second.split("-")
+        val translatedText: String = translatedPair.first
+        val afterText = formatTextAfterTranslate(translatedText)
+
+        val langs = translatedPair.second.split("-")
         val firstLang = langs[0].uppercase()
         val secondLang = langs[1].uppercase()
 
         if (firstLang == secondLang) return text
-        return "[$firstLang]: $beforeTranslate\n\n[$secondLang]: $afterTranslate"
+        return "[$firstLang]: $beforeText\n\n[$secondLang]: $afterText"
     }
 
-    private fun translateText(text: String, lang: String): Pair<String, String>? {
+    override fun requestTranslate(text: String, lang: String): Pair<String, String>? {
         val okHttpClient = OkHttpClient()
         val urlFinal = "$URL/translate?lang=$lang-ru&format=html&key=$key"
         val body: RequestBody = FormBody.Builder().add("text", text).build()
@@ -59,7 +59,7 @@ class TranslateService : DefaultTranslateService {
         }
     }
 
-    private fun detectLanguage(text: String): String? {
+    override fun requestDetectLanguage(text: String): String? {
         val okHttpClient = OkHttpClient()
         val urlFinal = "$URL/detect?hint=en,ru&key=$key"
         val body: RequestBody = FormBody.Builder().add("text", text).build()
@@ -81,8 +81,7 @@ class TranslateService : DefaultTranslateService {
         return null
     }
 
-
-    private fun beforeTranslate(text: String): String {
+    private fun formatTextBeforeTranslate(text: String): String {
         var result: String = text
         val firstChar = text[0]
         if (firstChar == '.') result = text.drop(1)
@@ -92,39 +91,23 @@ class TranslateService : DefaultTranslateService {
     }
 
 
-    private fun afterTranslate(text: String): String {
-        val refactorSymbol = refactorTranslate(text)
-        val deleteUnicode = deleteUnicode(refactorSymbol)
-        val replace = replace(deleteUnicode)
-        return replace
-    }
-
-    private fun replace(text: String): String {
+    private fun formatTextAfterTranslate(text: String): String {
         return text
             .replace("@элон Маск", "@elonmusk")
             .replace("@фредерик ламберт", "@fredericlambert")
             .replace("@ элон Маск", "@elonmusk")
             .replace("@Джорджлукасильм", "@GeorgeLucasILM")
-    }
 
-    private fun refactorTranslate(text: String): String {
-        return text
             .replace("\\n", "\n")
             .replace("[\"", "")
             .replace("\"]", "")
             .replace("\\\"", "")
 
-    }
-
-
-    private fun deleteUnicode(text: String): String {
-        return text
             .replace("\\u201c", "“")
             .replace("\\u201d", "”")
             .replace("\\u2014", "—")
             .replace("\\u2013", "–")
             .replace("\\u2026", "...")
     }
-
 
 }

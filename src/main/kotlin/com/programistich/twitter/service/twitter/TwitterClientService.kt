@@ -1,6 +1,6 @@
 package com.programistich.twitter.service.twitter
 
-import com.programistich.twitter.common.TypeMessage
+import com.programistich.twitter.common.TypeMessageTelegram
 import org.springframework.stereotype.Service
 import twitter4j.*
 
@@ -24,7 +24,7 @@ class TwitterClientService(
         return twitter.getLikedTweets(user.id).tweets[0]
     }
 
-    override fun parseTweet(tweetId: Long): TypeMessage? {
+    override fun parseTweet(tweetId: Long): TypeMessageTelegram? {
         val tweet = twitter.showStatus(tweetId)
         val urlEntity = tweet.quotedStatusPermalink
         var text = tweet.text
@@ -33,8 +33,8 @@ class TwitterClientService(
         }
         //text = usernameToLink(text)
         val medias = tweet.mediaEntities
-        var typeMessage: TypeMessage? = null
-        if (medias.isEmpty()) typeMessage = TypeMessage.TextMessage(text)
+        var typeMessageTelegram: TypeMessageTelegram? = null
+        if (medias.isEmpty()) typeMessageTelegram = TypeMessageTelegram.TextMessage(text)
         else {
             medias.toList().forEach {
                 val link = it.url
@@ -42,21 +42,21 @@ class TwitterClientService(
             }
             if (medias.size == 1) {
                 when (medias[0].type) {
-                    "photo" -> typeMessage = TypeMessage.PhotoMessage(medias[0].mediaURL, text)
+                    "photo" -> typeMessageTelegram = TypeMessageTelegram.PhotoMessage(medias[0].mediaURL, text)
                     "video" -> {
                         val urlVideo = medias[0].videoVariants.toList().sortedBy {
                             it.bitrate
                         }.reversed()[0].url
-                        typeMessage = TypeMessage.VideoMessage(urlVideo, text)
+                        typeMessageTelegram = TypeMessageTelegram.VideoMessage(urlVideo, text)
                     }
                     "animated_gif" -> {
                         if(medias[0].videoVariants.isNotEmpty()){
                             val urlVideo = medias[0].videoVariants.toList().sortedBy {
                                 it.bitrate
                             }.reversed()[0].url
-                            typeMessage = TypeMessage.VideoMessage(urlVideo, text)
+                            typeMessageTelegram = TypeMessageTelegram.VideoMessage(urlVideo, text)
                         }
-                        else typeMessage = TypeMessage.AnimatedMessage(medias[0].mediaURL, text)
+                        else typeMessageTelegram = TypeMessageTelegram.AnimatedMessage(medias[0].mediaURL, text)
                     }
                 }
             } else {
@@ -72,10 +72,10 @@ class TwitterClientService(
 //                        }
                     }
                 }
-                typeMessage = TypeMessage.ManyMediaMessage(url, text)
+                typeMessageTelegram = TypeMessageTelegram.ManyMediaMessage(url, text)
             }
         }
-        return typeMessage
+        return typeMessageTelegram
     }
 
     fun usernameToLink(text: String): String {

@@ -1,6 +1,7 @@
 package com.programistich.twitter.service.telegram
 
-import com.programistich.twitter.common.TypeByTweet
+import com.programistich.twitter.common.Extensions.id
+import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.model.TelegramChat
 import com.programistich.twitter.model.TwitterUser
 import com.programistich.twitter.service.db.DatabaseTelegramChatService
@@ -19,29 +20,36 @@ class TelegramCommandService(
     private val dataBaseTelegramChatService: DatabaseTelegramChatService,
     private val dataBaseTwitterUserService: DatabaseTwitterUserService,
     private val twitterClientService: TwitterClientService,
-    private val telegramBotExecutorService: TelegramBotExecutorService,
+    private val telegramExecutorService: TelegramExecutorService,
 ) : DefaultTelegramCommandService {
 
     private val logger = LoggerFactory.getLogger(TelegramCommandService::class.java)
 
-    override fun registerChat(chatId: String) {
+    override fun startCommand(chatId: String) {
         val existChat = dataBaseTelegramChatService.existChat(chatId)
-        if (!existChat) {
-            dataBaseTelegramChatService.createChat(TelegramChat(chatId))
-            telegramBotExecutorService.sendTextMessage(chatId, "Этот чат добавлен в БД")
-            logger.info("Chat $chatId not found in db and register now")
-        } else {
-            telegramBotExecutorService.sendTextMessage(chatId, "Этот чат уже есть в БД")
+        if (existChat) {
+            telegramExecutorService.sendTextMessage(chatId, "Этот чат уже есть в БД")
             logger.info("Chat $chatId exist in DB")
+        } else {
+            dataBaseTelegramChatService.createChat(TelegramChat(chatId))
+            telegramExecutorService.sendTextMessage(chatId, "Этот чат добавлен в БД")
+            logger.info("Chat $chatId not found in db and register now")
         }
     }
 
-    override fun addTwitterUsernameToChat(chatId: String, username: String, messageId: Int?) {
+    override fun newTwitterUserCommand(message: Message, username: String?) {
+        val chatId = message.id()
+        val messageId = message.messageId
+        if (username.isNullOrEmpty()) {
+            telegramExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
+            telegramExecutorService.deleteMessage(chatId, messageId)
+            return
+        }
         val existUsernameInTwitterClient = twitterClientService.existUsernameInTwitter(username)
         val existUsernameInChat = dataBaseTelegramChatService.existUsernameTwitter(chatId, username)
         val existUsernameInTwitterDb = dataBaseTwitterUserService.existUser(username)
         if (!existUsernameInTwitterClient) {
-            telegramBotExecutorService.sendTextMessage(chatId, "К сожалению такого человека нет в твиттере", messageId)
+            telegramExecutorService.sendTextMessage(chatId, "К сожалению такого человека нет в твиттере", messageId)
             logger.info(
                 "Chat id = $chatId intent subscribe " +
                         "on $username but this username not exists on Twitter"
@@ -49,29 +57,21 @@ class TelegramCommandService(
             return
         }
         if (existUsernameInChat) {
-            telegramBotExecutorService.sendTextMessage(chatId, "Этот человек уже есть у вас в чате", messageId)
+            telegramExecutorService.sendTextMessage(chatId, "$username уже есть в подписках", messageId)
             logger.info("Username = $username exist in chat")
             return
         }
         val chat = TelegramChat(chatId)
         val twitterUser: TwitterUser? = if (existUsernameInTwitterDb) {
-            telegramBotExecutorService.sendTextMessage(
-                chatId,
-                "Этот человек уже есть в БД, но теперь есть и у вас в чате"
-            )
+            telegramExecutorService.sendTextMessage(chatId, "Вы добавили $username к себе в чат!", messageId)
             logger.info("Username = $username exist in db")
             dataBaseTwitterUserService.getTwitterUserByUsername(username)
         } else {
-            telegramBotExecutorService.sendTextMessage(chatId, "Этот человек новый и для чата и для БД", messageId)
+            telegramExecutorService.sendTextMessage(chatId, "Вы добавили $username к себе в чат!", messageId)
             logger.info("Username = $username NOT exist in db")
             TwitterUser(username)
         }
         if (twitterUser == null) {
-            telegramBotExecutorService.sendTextMessage(
-                chatId,
-                "Что-то пошло не так в TelegramCommandService",
-                messageId
-            )
             logger.info("Twitter user null")
             return
         }
@@ -79,33 +79,37 @@ class TelegramCommandService(
         chat.twitterUsers.add(twitterUser)
         twitterUser.chats.add(chat)
         dataBaseTelegramChatService.updateChat(chat)
-        lastLikeTweetByUsername(chatId, username)
+        lastLikeTweetByUsernameCommand(message, username)
         logger.info("Username = $username add to chat id = $chatId")
     }
 
-    override fun lastLikeTweetByUsername(chatId: String, username: String, messageId: Int?) {
+    override fun lastLikeTweetByUsernameCommand(message: Message, username: String) {
+        val chatId = message.id()
+        val messageId = message.messageId
         val idLast = dataBaseTwitterUserService.lastLikeByUsername(username)
         if (idLast == null) {
             logger.info("last tweet by $username not found")
             return
         }
         val typeMessage = twitterClientService.parseTweet(idLast)
-        val typeTweet = TypeByTweet.Like(username, idLast, true)
-        telegramBotExecutorService.sendTweet(chatId, typeMessage, typeTweet, messageId)
+        val typeTweet = TypeCommand.Like(username, idLast, true)
+        telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet, messageId)
         logger.info("Send message $idLast to $chatId")
     }
 
-    override fun pingChat(chatId: String) {
-        telegramBotExecutorService.sendTextMessage(chatId, "Живой я, живой, чо пингуешь")
+    override fun pingCommand(chatId: String) {
+        telegramExecutorService.sendTextMessage(chatId, "Живой я, живой, чо пингуешь")
     }
 
-    // https://twitter.com/TOSHIK113/status/1472956899146543105?s=20
-    // TOSHIK113/status/1472956899146543105?s=20
-    // 1472956899146543105?s=20
-    override fun getTweet(message: Message, link: String) {
+    override fun getTweetCommand(message: Message, link: String?) {
         val chatId = message.chatId.toString()
         val author = message.from.firstName
         val messageId = message.messageId
+        if (link.isNullOrEmpty()) {
+            telegramExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
+            telegramExecutorService.deleteMessage(chatId, messageId)
+            return
+        }
         try {
             val formatLink = link.replace("https://twitter.com/", "").split("/")
             val username = formatLink[0]
@@ -118,25 +122,26 @@ class TelegramCommandService(
             val id = result.toLong()
             logger.info("get post with id = $id")
             val typeMessage = twitterClientService.parseTweet(id)
-            val typeTweet = TypeByTweet.Get(username, link, author)
-            telegramBotExecutorService.sendTweet(chatId, typeMessage, typeTweet)
+            val typeTweet = TypeCommand.Get(username, link, author)
+            telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet)
+            telegramExecutorService.deleteMessage(chatId, messageId)
         } catch (e: TelegramApiException) {
             logger.info("Error " + e.message)
-            telegramBotExecutorService.sendTextMessage(
+            telegramExecutorService.sendTextMessage(
                 chatId,
                 "Что-то пошло не так и Дуров не дает загрузить",
                 messageId
             )
         } catch (e: TwitterException) {
             logger.info("Error " + e.message)
-            telegramBotExecutorService.sendTextMessage(
+            telegramExecutorService.sendTextMessage(
                 chatId,
                 "Что-то пошло не так и Твиттер что-то не так сделаль",
                 messageId
             )
         } catch (e: IndexOutOfBoundsException) {
             logger.info("Error " + e.message)
-            telegramBotExecutorService.sendTextMessage(
+            telegramExecutorService.sendTextMessage(
                 chatId,
                 "Что-то пошло не так, точно правильная ссылка?",
                 messageId
@@ -144,22 +149,33 @@ class TelegramCommandService(
         }
     }
 
-    override fun getRandomPicture(chatId: String) {
-        TODO("Not yet implemented")
-    }
 
-    override fun getPictureByText(message: Message?, query: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun donate(chatId: String) {
-        telegramBotExecutorService.sendTextMessage(
+    override fun donateCommand(message: Message) {
+        val chatId = message.id()
+        val messageId = message.messageId
+        telegramExecutorService.sendTextMessage(
             chatId,
             "Есть несколько вариантов поддержки:\n<a href=\"https://send.monobank.ua/jar/9B7DzKsjk7\">Банка монобанка</a>\nКарта Моно <pre>4441114440821211</pre>\nКарта YooMoney <pre>4048025000163488</pre>\nКрипта <pre>0xf6A2255f333EF47845BaCfD26A0bEaaD296B9019</pre>"
         )
-        telegramBotExecutorService.sendStickerMessage(
+        telegramExecutorService.sendStickerMessage(
             chatId,
             "CAACAgUAAxkBAAIC42HDbkEHhXo4h-g1rQoFfxqdYVjeAAIKAQACdflYFOEIo5rse7wLIwQ"
+        )
+        telegramExecutorService.deleteMessage(chatId, messageId)
+    }
+
+    override fun helpCommand(message: Message) {
+        val chatId = message.id()
+        val messageId = message.messageId
+        telegramExecutorService.sendTextMessage(
+            chatId,
+            """
+                Этот бот предназначен для отслеживания людей в твиттере
+                /get %link% - отправит твит по ссылке
+                /ping - проверка жив ли бот
+                /new %username% - подписка на лайки от конкретного человека 
+                /donate - поддержать автора @programistich 
+            """.trimIndent()
         )
     }
 

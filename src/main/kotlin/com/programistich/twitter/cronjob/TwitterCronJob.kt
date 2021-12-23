@@ -1,10 +1,10 @@
 package com.programistich.twitter.cronjob
 
-import com.programistich.twitter.common.TypeByTweet
+import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.model.TwitterUser
 import com.programistich.twitter.service.db.DatabaseTelegramChatService
 import com.programistich.twitter.service.db.DatabaseTwitterUserService
-import com.programistich.twitter.service.telegram.TelegramBotExecutorService
+import com.programistich.twitter.service.telegram.TelegramExecutorService
 import com.programistich.twitter.service.twitter.TwitterClientService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -17,7 +17,7 @@ class TwitterCronJob(
     private val databaseTwitterUserService: DatabaseTwitterUserService,
     private val databaseTelegramChatService: DatabaseTelegramChatService,
     private val twitterClientService: TwitterClientService,
-    private val telegramBotExecutorService: TelegramBotExecutorService
+    private val telegramExecutorService: TelegramExecutorService
 ) : DefaultTwitterCronJob {
 
     private val logger = LoggerFactory.getLogger(TwitterCronJob::class.java)
@@ -102,8 +102,8 @@ class TwitterCronJob(
             val chats = databaseTelegramChatService.getChatsByUsername(username)
             chats.map {
                 logger.info("Send tweet to $it")
-                val typeTweet = TypeByTweet.Like(username, tweetInTwitter.id)
-                telegramBotExecutorService.sendTweet(it, parsedTweet, typeTweet)
+                val typeTweet = TypeCommand.Like(username, tweetInTwitter.id)
+                telegramExecutorService.sendTweet(it, parsedTweet, typeTweet)
             }
         }
     }

@@ -21,7 +21,6 @@ class Bot(
     }
 
     override fun onUpdateReceived(update: Update) {
-        println(update)
         if (update.hasMessage()) {
             router.parseMessage(update)
         }

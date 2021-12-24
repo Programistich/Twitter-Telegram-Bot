@@ -108,6 +108,7 @@ class TranslateService : DefaultTranslateService {
             .replace("\$ТСЛА", "\$TSLA")
             .replace("\$ТСЛА", "\$TSLA")
             .replace("#PlaidМоделИ", "#PlaidМоделS")
+            .replace("@элонмуск", "@elonmusk")
                 //##Tesla #Платные модели идентифицируют, выбирают и паркуются в стойлах с наддувом
 
             .replace("\\n", "\n")

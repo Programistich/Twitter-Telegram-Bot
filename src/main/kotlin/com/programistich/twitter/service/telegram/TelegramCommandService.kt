@@ -102,12 +102,14 @@ class TelegramCommandService(
     }
 
     override fun getTweetCommand(message: Message, link: String?) {
-        val chatId = message.chatId.toString()
         val author = message.from.firstName
-        val messageId = message.messageId
+        val chatId = message.chatId.toString()
+        val replyMessage = message.replyToMessage
+        val messageId = if (replyMessage != null) replyMessage.messageId
+        else message.messageId
         if (link.isNullOrEmpty()) {
             telegramExecutorService.sendTextMessage(chatId, "Поле не может быть пустым", messageId)
-            telegramExecutorService.deleteMessage(chatId, messageId)
+            telegramExecutorService.deleteMessage(chatId, message.messageId)
             return
         }
         try {
@@ -124,7 +126,7 @@ class TelegramCommandService(
             val typeMessage = twitterClientService.parseTweet(id)
             val typeTweet = TypeCommand.Get(username, link, author)
             telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet, messageId)
-            telegramExecutorService.deleteMessage(chatId, messageId)
+            telegramExecutorService.deleteMessage(chatId, message.messageId)
         } catch (e: TelegramApiException) {
             logger.info("Error " + e.message)
             telegramExecutorService.sendTextMessage(

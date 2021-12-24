@@ -106,7 +106,7 @@ class TelegramCommandService(
         val author = message.from.firstName
         val messageId = message.messageId
         if (link.isNullOrEmpty()) {
-            telegramExecutorService.sendTextMessage(chatId, "Поле не может быть пустым")
+            telegramExecutorService.sendTextMessage(chatId, "Поле не может быть пустым", messageId)
             telegramExecutorService.deleteMessage(chatId, messageId)
             return
         }
@@ -123,7 +123,7 @@ class TelegramCommandService(
             logger.info("get post with id = $id")
             val typeMessage = twitterClientService.parseTweet(id)
             val typeTweet = TypeCommand.Get(username, link, author)
-            telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet)
+            telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet, messageId)
             telegramExecutorService.deleteMessage(chatId, messageId)
         } catch (e: TelegramApiException) {
             logger.info("Error " + e.message)

@@ -196,9 +196,17 @@ class TelegramExecutorService(
             }
             is TypeCommand.Like -> {
                 val tweet = twitterClientService.getTweetById(typeCommand.tweetId)
+
+                val nameAction = twitterClientService.nameUser(typeCommand.username)
+                val linkOnUserAction = twitterClientService.urlUser(typeCommand.username)
+
                 val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
+                val tweetAuthorLink = twitterClientService.urlUser(tweetAuthor)
+
+                val tweetLink = twitterClientService.getLinkOnTweet(typeCommand.tweetId, tweetAuthor)
+
                 if (typeCommand.last) "Последний лайк $tweetAuthor на твит(tweetLink) от $tweetAuthor"
-                else "Лайк $tweetAuthor на твит(tweetLink) от $tweetAuthor"
+                else "Лайк $nameAction($linkOnUserAction) на твит($tweetLink) от $tweetAuthor($tweetAuthorLink)"
             }
         }
     }

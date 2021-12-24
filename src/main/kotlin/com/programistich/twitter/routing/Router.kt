@@ -20,7 +20,7 @@ class Router(
         val command = update.getCommand(botConfiguration.username)
         if (command != null) {
             parseMessageWithCommand(command, update)
-        } else parseTextMessage(update.message)
+        } else if (update.message.text != null) parseTextMessage(update.message)
     }
 
     override fun parseMessageWithCommand(commandEnum: Command, update: Update) {

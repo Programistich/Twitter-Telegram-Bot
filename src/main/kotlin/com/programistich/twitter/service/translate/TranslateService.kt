@@ -34,7 +34,7 @@ class TranslateService : DefaultTranslateService {
         val secondLang = langs[1].uppercase()
 
         if (firstLang == secondLang) return text
-        return "[$firstLang]: $beforeText\n\n[$secondLang]: $afterText"
+        return "[$firstLang]: $text\n\n[$secondLang]: $afterText"
     }
 
     override fun requestTranslate(text: String, lang: String): Pair<String, String>? {
@@ -88,6 +88,9 @@ class TranslateService : DefaultTranslateService {
         return result
             .replace("Irony Man", "Железный человек")
             .replace("Elon's", "Илона")
+            .replace("BREAKING", "Последняя новость")
+            .replace("AP", "AutoPilot")
+            .replace("supercharging", "Tesla SuperCharger")
     }
 
 
@@ -97,6 +100,15 @@ class TranslateService : DefaultTranslateService {
             .replace("@фредерик ламберт", "@fredericlambert")
             .replace("@ элон Маск", "@elonmusk")
             .replace("@Джорджлукасильм", "@GeorgeLucasILM")
+            .replace("@тесла_адри", "@tesla_adri")
+            .replace("@нуродев", "@nurodev")
+            .replace("@Элон Маск", "@elonmusk")
+            .replace("@Тесла", "@Tesla")
+            .replace("@Настоящий футурист", "@Real_Futurist")
+            .replace("\$ТСЛА", "\$TSLA")
+            .replace("\$ТСЛА", "\$TSLA")
+            .replace("#PlaidМоделИ", "#PlaidМоделS")
+                //##Tesla #Платные модели идентифицируют, выбирают и паркуются в стойлах с наддувом
 
             .replace("\\n", "\n")
             .replace("[\"", "")

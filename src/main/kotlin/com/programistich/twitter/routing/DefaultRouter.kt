@@ -34,6 +34,7 @@ class DefaultRouter(
             Command.NEW_TWITTER_USER -> telegramCommandService.newTwitterUserCommand(message, messageWithoutCommand)
             Command.GET -> telegramCommandService.getTweetCommand(message, messageWithoutCommand)
             Command.HELP -> telegramCommandService.helpCommand(message)
+            Command.STOCKS -> telegramCommandService.stocksCommand(message)
             else -> {
 
             }

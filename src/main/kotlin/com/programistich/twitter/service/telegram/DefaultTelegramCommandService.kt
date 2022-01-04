@@ -6,6 +6,7 @@ import com.programistich.twitter.model.TelegramChat
 import com.programistich.twitter.model.TwitterUser
 import com.programistich.twitter.service.db.DatabaseTelegramChatService
 import com.programistich.twitter.service.db.DatabaseTwitterUserService
+import com.programistich.twitter.service.stocks.StocksService
 import com.programistich.twitter.service.twitter.TwitterClientService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -21,6 +22,7 @@ class DefaultTelegramCommandService(
     private val dataBaseTwitterUserServiceDefault: DatabaseTwitterUserService,
     private val twitterClientService: TwitterClientService,
     private val telegramExecutorService: TelegramExecutorService,
+    private val stocksService: StocksService
 ) : TelegramCommandService {
 
     private val logger = LoggerFactory.getLogger(DefaultTelegramCommandService::class.java)
@@ -177,6 +179,13 @@ class DefaultTelegramCommandService(
                 • /ping - проверка жив ли бот
             """.trimIndent()
         )
+    }
+
+    override fun stocksCommand(message: Message) {
+        val chatId = message.id()
+        val messageId = message.messageId
+        val stock = stocksService.getStock("TSLA")
+        stocksService.sendStock(chatId, messageId, stock)
     }
 
 

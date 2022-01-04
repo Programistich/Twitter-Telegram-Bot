@@ -9,6 +9,7 @@ enum class Command(val command: String) {
     PICTURE("/pic"),
     DONATE("/donate"),
     HELP("/help"),
+    STOCKS("/stock"),
     PING("/ping");
 
     companion object {

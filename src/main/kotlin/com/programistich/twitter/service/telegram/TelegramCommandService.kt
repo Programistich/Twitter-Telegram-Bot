@@ -11,4 +11,5 @@ interface TelegramCommandService {
     fun getTweetCommand(message: Message, link: String?)
     fun donateCommand(message: Message)
     fun helpCommand(message: Message)
+    fun stocksCommand(message: Message)
 }

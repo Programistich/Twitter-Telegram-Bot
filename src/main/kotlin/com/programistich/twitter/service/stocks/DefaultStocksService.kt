@@ -41,8 +41,13 @@ class DefaultStocksService(
         """.trimIndent()
     }
 
-    override fun sendStock(chatId: String, stock: Stock) {
+    override fun sendStock(chatId: String, messageId: Int?, stock: Stock) {
         val text = aboutStock(stock)
-        telegramExecutorService.sendTextMessage(chatId, text)
+        telegramExecutorService.sendTextMessage(chatId, text, messageId)
+    }
+
+    override fun sendStock(chatId: String, messageId: Int?, name: String) {
+        val stock = YahooFinance.get(name)
+        sendStock(chatId, messageId, stock)
     }
 }

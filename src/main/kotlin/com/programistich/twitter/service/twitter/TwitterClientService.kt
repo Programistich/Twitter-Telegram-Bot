@@ -11,22 +11,16 @@ class TwitterClientService(
 
     override fun existUsernameInTwitter(username: String): Boolean {
         return try {
-            val user = twitter.showUser(username)
+            twitter.showUser(username)
             true
         } catch (e: TwitterException) {
             false
         }
     }
 
-
-    @Throws
     override fun lastLikeTweetByUsername(username: String): Tweet {
-        try {
-            val user = twitter.showUser(username)
-            return twitter.getLikedTweets(user.id).tweets[0]
-        } catch (exc: TwitterException) {
-            throw TwitterException("da")
-        }
+        val user = twitter.showUser(username)
+        return twitter.getLikedTweets(userId = user.id, maxResults = 5).tweets[0]
     }
 
     override fun parseTweet(tweetId: Long): TypeMessageTelegram? {
@@ -36,7 +30,6 @@ class TwitterClientService(
         if (urlEntity != null) {
             text = text.replace(urlEntity.url, "")
         }
-        //text = usernameToLink(text)
         val medias = tweet.mediaEntities
         var typeMessageTelegram: TypeMessageTelegram? = null
         if (medias.isEmpty()) typeMessageTelegram = TypeMessageTelegram.TextMessage(text)

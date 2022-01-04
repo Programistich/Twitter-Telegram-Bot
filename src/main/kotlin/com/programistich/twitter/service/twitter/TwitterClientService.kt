@@ -19,9 +19,14 @@ class TwitterClientService(
     }
 
 
+    @Throws
     override fun lastLikeTweetByUsername(username: String): Tweet {
-        val user = twitter.showUser(username)
-        return twitter.getLikedTweets(user.id).tweets[0]
+        try {
+            val user = twitter.showUser(username)
+            return twitter.getLikedTweets(user.id).tweets[0]
+        } catch (exc: TwitterException) {
+            throw TwitterException("da")
+        }
     }
 
     override fun parseTweet(tweetId: Long): TypeMessageTelegram? {
@@ -50,13 +55,12 @@ class TwitterClientService(
                         typeMessageTelegram = TypeMessageTelegram.VideoMessage(urlVideo, text)
                     }
                     "animated_gif" -> {
-                        if(medias[0].videoVariants.isNotEmpty()){
+                        if (medias[0].videoVariants.isNotEmpty()) {
                             val urlVideo = medias[0].videoVariants.toList().sortedBy {
                                 it.bitrate
                             }.reversed()[0].url
                             typeMessageTelegram = TypeMessageTelegram.VideoMessage(urlVideo, text)
-                        }
-                        else typeMessageTelegram = TypeMessageTelegram.AnimatedMessage(medias[0].mediaURL, text)
+                        } else typeMessageTelegram = TypeMessageTelegram.AnimatedMessage(medias[0].mediaURL, text)
                     }
                 }
             } else {

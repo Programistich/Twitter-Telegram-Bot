@@ -27,8 +27,8 @@ class DefaultStocksService(
         val percent = ((open - close) / close).multiply(BigDecimal(100))
         val dayLow = quote.dayLow.toInt()
         val dayHigh = quote.dayHigh.toInt()
-        val volume = (quote.volume / 100_000).toInt()
-        val avgVolume = (quote.avgVolume / 100_00).toInt()
+        val volume = (quote.volume / 1_000_000).toInt()
+        val avgVolume = (quote.avgVolume / 1_000_000).toInt()
         return """
             Акции: <b>${stock.name} ($symbol)</b>
             Дата: <b>$date</b>
@@ -37,7 +37,7 @@ class DefaultStocksService(
             Цена закрытия: <b>${close.toInt()}$</b>
             Диапозон цен: <b>$dayLow$ - $dayHigh$</b>
             Объём торгов за сегодня: <b>${volume}M</b>
-            Объём торгов за год: <b>${avgVolume}M</b>
+            Средний Объём торгов за год: <b>${avgVolume}M</b>
         """.trimIndent()
     }
 

@@ -1,38 +1,35 @@
-package com.programistich.twitter.cronjob
+package com.programistich.twitter.cronjob.twitter
 
 import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.model.TwitterUser
-import com.programistich.twitter.service.db.DatabaseTelegramChatService
-import com.programistich.twitter.service.db.DatabaseTwitterUserService
-import com.programistich.twitter.service.telegram.TelegramExecutorService
-import com.programistich.twitter.service.twitter.TwitterClientService
+import com.programistich.twitter.service.db.DefaultDatabaseTelegramChatService
+import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService
+import com.programistich.twitter.service.telegram.DefaultTelegramExecutorService
+import com.programistich.twitter.service.twitter.DefaultTwitterClientService
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import twitter4j.Tweet
-import twitter4j.Twitter
 
 @Service
 @Transactional
-class TwitterCronJob(
-    private val databaseTwitterUserService: DatabaseTwitterUserService,
-    private val databaseTelegramChatService: DatabaseTelegramChatService,
-    private val twitterClientService: TwitterClientService,
-    private val telegramExecutorService: TelegramExecutorService,
-    private val twitter: Twitter
-) : DefaultTwitterCronJob {
+class DefaultTwitterCronJob(
+    private val defaultDatabaseTwitterUserService: DefaultDatabaseTwitterUserService,
+    private val databaseTelegramChatService: DefaultDatabaseTelegramChatService,
+    private val defaultTwitterClientService: DefaultTwitterClientService,
+    private val telegramExecutorService: DefaultTelegramExecutorService
+) : TwitterCronJob {
 
-    private val logger = LoggerFactory.getLogger(TwitterCronJob::class.java)
+    private val logger = LoggerFactory.getLogger(DefaultTwitterCronJob::class.java)
 
-    @Scheduled(fixedDelay = 1000_00)
-    fun updateTwitter() {
+    //@Scheduled(fixedDelay = 1000_00)
+    private fun updateTwitter() {
         updateTwitterLikesForAllUsernames()
     }
 
-    fun updateTwitterLikesForAllUsernames() {
+    override fun updateTwitterLikesForAllUsernames() {
         logger.info("Start updater likes")
-        val usernames = databaseTwitterUserService.getAllUsername()
+        val usernames = defaultDatabaseTwitterUserService.getAllUsername()
         usernames.forEach {
             updateTwitterLikeForUsername(it)
         }
@@ -40,14 +37,14 @@ class TwitterCronJob(
     }
 
     fun updateTwitterLikeForUsername(username: String) {
-        val existUsername = databaseTwitterUserService.existUser(username)
+        val existUsername = defaultDatabaseTwitterUserService.existUser(username)
         if (!existUsername) {
             logger.info("Username = $username not found in db")
             return
         }
 
-        val tweetInDB = databaseTwitterUserService.getTwitterUserByUsername(username)
-        val tweetInTwitter: Tweet = twitterClientService.lastLikeTweetByUsername(username)
+        val tweetInDB = defaultDatabaseTwitterUserService.getTwitterUserByUsername(username)
+        val tweetInTwitter: Tweet = defaultTwitterClientService.lastLikeTweetByUsername(username)
 
         if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastLikeId) {
             logger.info("New tweet from $username id = $tweetInTwitter.id")
@@ -57,9 +54,9 @@ class TwitterCronJob(
                 lastTweetId = tweetInDB!!.lastTweetId,
                 chats = tweetInDB.chats
             )
-            databaseTwitterUserService.updateTwitterUser(twitterUser)
+            defaultDatabaseTwitterUserService.updateTwitterUser(twitterUser)
             logger.info("Update username = $username")
-            val parsedTweet = twitterClientService.parseTweet(tweetInTwitter.id)
+            val parsedTweet = defaultTwitterClientService.parseTweet(tweetInTwitter.id)
             val chats = databaseTelegramChatService.getChatsByUsername(username)
             chats.map {
                 logger.info("Send tweet to $it")

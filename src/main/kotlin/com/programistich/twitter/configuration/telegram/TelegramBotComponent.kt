@@ -16,6 +16,7 @@ class TelegramBotComponent {
     fun telegramBot(bot: Bot): TelegramBotsApi {
         val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)
         telegramBotsApi.registerBot(bot)
+        bot.clearWebhook()
         return telegramBotsApi
     }
 

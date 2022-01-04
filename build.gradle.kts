@@ -35,8 +35,8 @@ dependencies {
 	implementation("org.twitter4j:twitter4j-core:4.0.7")
 	implementation("org.twitter4j:twitter4j-media-support:4.0.6")
 
-	implementation("org.telegram:telegrambots:5.5.0")
-	implementation("org.telegram:telegrambots-meta:5.5.0")
+	implementation("org.telegram:telegrambots:5.6.0")
+	implementation("org.telegram:telegrambots-meta:5.6.0")
 
 	implementation("com.squareup.okhttp3:okhttp:4.9.3")
 

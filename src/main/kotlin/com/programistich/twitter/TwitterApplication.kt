@@ -9,6 +9,9 @@ import org.springframework.scheduling.annotation.EnableScheduling
 class TwitterApplication
 
 fun main() {
+    System.getProperties()["proxySet"] = "true"
+    System.getProperties()["socksProxyHost"] = "127.0.0.1"
+    System.getProperties()["socksProxyPort"] = "9150"
     runApplication<TwitterApplication>()
 }
 

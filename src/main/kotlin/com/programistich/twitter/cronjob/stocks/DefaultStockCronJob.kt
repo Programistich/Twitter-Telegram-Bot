@@ -12,7 +12,8 @@ class DefaultStockCronJob(
     private val databaseTelegramChatService: DatabaseTelegramChatService
 ) : StockCronJob {
 
-    @Scheduled(cron = "0 0 10 * * *")
+    //@Scheduled(cron = "0 0 10 * * *")
+    @Scheduled(fixedDelay = 1000)
     override fun getTeslaStocks() {
         databaseTelegramChatService.getAllChats().forEach {
             stockService.sendStock(it.chatId, stockService.getStock("TSLA"))

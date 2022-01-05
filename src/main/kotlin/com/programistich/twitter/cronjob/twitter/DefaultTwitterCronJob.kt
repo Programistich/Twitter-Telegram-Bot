@@ -7,6 +7,7 @@ import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService
 import com.programistich.twitter.service.telegram.DefaultTelegramExecutorService
 import com.programistich.twitter.service.twitter.DefaultTwitterClientService
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import twitter4j.Tweet
@@ -22,7 +23,7 @@ class DefaultTwitterCronJob(
 
     private val logger = LoggerFactory.getLogger(DefaultTwitterCronJob::class.java)
 
-    //@Scheduled(fixedDelay = 1000_00)
+    @Scheduled(fixedDelay = 1000_00)
     private fun updateTwitter() {
         updateTwitterLikesForAllUsernames()
     }

@@ -121,6 +121,7 @@ class DefaultTranslateService : TranslateService {
             .replace("\\u2014", "—")
             .replace("\\u2013", "–")
             .replace("\\u2026", "...")
+            .replace("\\u2022", "•")
     }
 
 }

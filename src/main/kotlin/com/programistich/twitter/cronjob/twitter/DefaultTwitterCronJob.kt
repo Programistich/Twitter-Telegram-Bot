@@ -23,8 +23,8 @@ class DefaultTwitterCronJob(
 
     private val logger = LoggerFactory.getLogger(DefaultTwitterCronJob::class.java)
 
-    @Scheduled(fixedDelay = 1000_00)
-    private fun updateTwitter() {
+    @Scheduled(fixedDelay = 5 * 60 * 1000)
+    fun updateTwitter() {
         updateTwitterLikesForAllUsernames()
     }
 

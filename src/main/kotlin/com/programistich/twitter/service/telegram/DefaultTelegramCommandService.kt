@@ -182,6 +182,7 @@ class DefaultTelegramCommandService(
                 • /ping - проверка жив ли бот
             """.trimIndent()
         )
+        telegramExecutorService.deleteMessage(chatId, messageId)
     }
 
     override fun stocksCommand(message: Message) {

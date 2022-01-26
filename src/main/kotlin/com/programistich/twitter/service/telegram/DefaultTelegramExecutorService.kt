@@ -48,7 +48,7 @@ class DefaultTelegramExecutorService(
                 sendVideoMessageByUrl(chatId, textMessage, typeMessage.url, replyToMessageId)
             }
             is TypeMessageTelegram.ManyMediaMessage -> {
-                val textMessage = formatText(headerTextForManyMedia(typeCommand), typeMessage.text)
+                val textMessage = formatText(headerText(typeCommand), typeMessage.text)
                 sendManyMediaMessageByUrls(chatId, textMessage, typeMessage.urlsMedia, replyToMessageId)
             }
             else -> {
@@ -121,6 +121,7 @@ class DefaultTelegramExecutorService(
         media.media = urls[0]
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
         media.caption = textMessage
+        media.parseMode = "html"
         listMedia.add(media)
         for (i in 1 until urls.size) {
             media = InputMediaPhoto()
@@ -184,30 +185,5 @@ class DefaultTelegramExecutorService(
             }
         }
 
-    }
-
-    private fun headerTextForManyMedia(typeCommand: TypeCommand): String {
-        return when (typeCommand) {
-            is TypeCommand.Get -> {
-                val nameUser = twitterClientService.nameUser(typeCommand.username)
-                val author = typeCommand.author
-                val link = typeCommand.link
-                "Твит от $nameUser($link) by $author"
-            }
-            is TypeCommand.Like -> {
-                val tweet = twitterClientService.getTweetById(typeCommand.tweetId)
-
-                val nameAction = twitterClientService.nameUser(typeCommand.username)
-                val linkOnUserAction = twitterClientService.urlUser(typeCommand.username)
-
-                val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
-                val tweetAuthorLink = twitterClientService.urlUser(tweetAuthor)
-
-                val tweetLink = twitterClientService.getLinkOnTweet(typeCommand.tweetId, tweetAuthor)
-
-                if (typeCommand.last) "Последний лайк $tweetAuthor на твит(tweetLink) от $tweetAuthor"
-                else "Лайк $nameAction($linkOnUserAction) на твит($tweetLink) от $tweetAuthor($tweetAuthorLink)"
-            }
-        }
     }
 }

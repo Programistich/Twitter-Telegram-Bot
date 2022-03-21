@@ -24,23 +24,32 @@ repositories {
 }
 
 dependencies {
+	// Spring
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.flywaydb:flyway-core")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 
+	// DB
+	implementation("org.flywaydb:flyway-core")
+	runtimeOnly("org.postgresql:postgresql")
+
+	// Kotlin
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+	// Twitter
 	implementation("jp.takke.twitter4j-v2:twitter4j-v2-support:1.0.3")
 	implementation("org.twitter4j:twitter4j-core:4.0.7")
 	implementation("org.twitter4j:twitter4j-media-support:4.0.6")
 
+	// Telegram
 	implementation("org.telegram:telegrambots:5.6.0")
 	implementation("org.telegram:telegrambots-meta:5.6.0")
 
 	implementation("com.squareup.okhttp3:okhttp:4.9.3")
 	implementation("com.flickr4java:flickr4java:3.0.6")
 	implementation("com.yahoofinance-api:YahooFinanceAPI:3.15.0")
+
+	implementation("org.tomlj:tomlj:1.0.0")
 
 }
 

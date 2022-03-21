@@ -1,0 +1,53 @@
+version: "3.3"
+
+services:
+  twitter-db:
+    container_name: twitter-db
+    image: postgres:14
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    ports:
+      - "5432:5432"
+
+  twitter-pgadmin:
+    container_name: twitter-pgadmin
+    image: dpage/pgadmin4
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=root@root.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    restart: always
+    ports:
+      - "5050:80"
+
+  twitter:
+    container_name: twitter
+    build:
+      dockerfile: Dockerfile
+      context: .
+    restart: always
+    environment:
+      - JDBC_URL=jdbc:postgresql://twitter-db:5432/${POSTGRES_DB}
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - TWITTER_API_KEY
+      - TWITTER_SECRET_KEY
+      - TWITTER_ACCESS_TOKEN
+      - TWITTER_SECRET_TOKEN
+      - TWITTER_BEARER_TOKEN
+      - TELEGRAM_TOKEN
+      - TELEGRAM_USERNAME
+      - YANDEX_API_KEY
+    depends_on:
+      - twitter-db
+
+volumes:
+  postgres-data:
+  pgadmin-data:

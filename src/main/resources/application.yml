@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: "org.postgresql.Driver"
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    url: ${JDBC_URL:jdbc:postgresql://localhost:5432/twitter}
+  flyway:
+    out-of-order: true
+    locations: "classpath:db/migration"
+
+twitter:
+  api_key: ${TWITTER_API_KEY}
+  secret_key: ${TWITTER_SECRET_KEY}
+  access_token: ${TWITTER_ACCESS_TOKEN}
+  secret_token: ${TWITTER_SECRET_TOKEN}
+  bearer_token: ${TWITTER_BEARER_TOKEN}
+
+telegram:
+  token: ${TELEGRAM_TOKEN}
+  username: ${TELEGRAM_USERNAME}
+
+yandex:
+  translate.api: ${YANDEX_API_KEY}

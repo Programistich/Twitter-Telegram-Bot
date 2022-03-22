@@ -6,7 +6,7 @@ import twitter4j.*
 
 @Service
 class DefaultTwitterClientService(
-    private val twitter: Twitter
+    private val twitter: Twitter,
 ) : TwitterClientService {
 
     override fun existUsernameInTwitter(username: String): Boolean {
@@ -18,9 +18,20 @@ class DefaultTwitterClientService(
         }
     }
 
-    override fun lastLikeTweetByUsername(username: String): Tweet {
+    override fun getUserNameByTweetId(tweetId: Long): String {
+        val tweet = getTweetById(tweetId)
+        val user = twitter.showUser(tweet.authorId!!)
+        return user.name
+    }
+
+    override fun lastLikeByUsername(username: String): Tweet {
         val user = twitter.showUser(username)
         return twitter.getLikedTweets(userId = user.id, maxResults = 5).tweets[0]
+    }
+
+    override fun lastTweetByUsername(username: String): Tweet {
+        val status = twitter.getUserTimeline(username).first()
+        return twitter.getTweets(status.id).tweets[0]
     }
 
     override fun parseTweet(tweetId: Long): TypeMessageTelegram? {

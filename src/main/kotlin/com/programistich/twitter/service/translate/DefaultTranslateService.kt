@@ -34,7 +34,7 @@ class DefaultTranslateService : TranslateService {
         val secondLang = langs[1].uppercase()
 
         if (firstLang == secondLang) return text
-        return "[$firstLang]: $text\n\n[$secondLang]: $afterText"
+        return "[$firstLang]: ${text.replace("<", "")}\n\n[$secondLang]: $afterText"
     }
 
     override fun requestTranslate(text: String, lang: String): Pair<String, String>? {

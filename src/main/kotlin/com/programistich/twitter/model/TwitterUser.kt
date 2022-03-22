@@ -10,7 +10,7 @@ class TwitterUser(
     val username: String = "",
 
     @Column(name = "last_tweet")
-    val lastTweetId: Long? = 0,
+    var lastTweetId: Long? = 0,
 
     @Column(name = "last_like")
     var lastLikeId: Long? = 0,

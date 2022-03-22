@@ -22,6 +22,10 @@ class DefaultDatabaseTwitterUserService(
         return twitterUserRepository.getById(username).lastLikeId
     }
 
+    override fun lastTweetByUsername(username: String): Long? {
+        return twitterUserRepository.getById(username).lastTweetId
+    }
+
     override fun getAllUsername(): List<String> {
         return twitterUserRepository.findAll().map { it.username }
     }

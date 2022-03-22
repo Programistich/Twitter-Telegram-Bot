@@ -13,24 +13,60 @@ import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import twitter4j.Tweet
 
 @Service
 class DefaultTelegramExecutorService(
     private val bot: Bot,
     private val twitterClientService: TwitterClientService,
-    private val translateService: TranslateService
+    private val translateService: TranslateService,
 ) : TelegramExecutorService {
 
     private val logger = LoggerFactory.getLogger(DefaultTelegramExecutorService::class.java)
+
+    fun Tweet.newId(): Long? {
+        val ids = listOf(
+            quotedTweetId,
+            retweetId,
+            repliedToTweetId)
+        return ids.filterNotNull().firstOrNull()
+    }
+
+    override fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String?){
+        val username = twitterClientService.getUserNameByTweetId(tweetId)
+        val newMessageId = sendTweet(tweetId, chatId, null)
+        sendTweet(
+            chatId = chatId,
+            typeMessage = twitterClientService.parseTweet(tweetId),
+            typeCommand = TypeCommand.Tweet(username, tweetId, author),
+            replyToMessageId = newMessageId
+        )
+    }
+
+    private fun sendTweet(tweetId: Long, chatId: String, messageId: Int?): Int? {
+        val tweet = twitterClientService.getTweetById(tweetId)
+        val id = tweet.newId()
+        if (id != null) {
+            val newMessageId = sendTweet(id, chatId, messageId)
+            val username = twitterClientService.getUserNameByTweetId(id)
+            return sendTweet(
+                chatId = chatId,
+                typeMessage = twitterClientService.parseTweet(id),
+                typeCommand = TypeCommand.Tweet(username, id),
+                replyToMessageId = newMessageId
+            )
+        }
+        return messageId
+    }
 
     override fun sendTweet(
         chatId: String,
         typeMessage: TypeMessageTelegram?,
         typeCommand: TypeCommand,
         replyToMessageId: Int?,
-    ) {
+    ): Int {
         val headerText = headerText(typeCommand)
-        when (typeMessage) {
+        return when (typeMessage) {
             is TypeMessageTelegram.TextMessage -> {
                 val textMessage = formatText(headerText, typeMessage.text)
                 sendTextMessage(chatId, textMessage, replyToMessageId)
@@ -52,7 +88,7 @@ class DefaultTelegramExecutorService(
                 sendManyMediaMessageByUrls(chatId, textMessage, typeMessage.urlsMedia, replyToMessageId)
             }
             else -> {
-                bot.execute(SendMessage(chatId, "Что-то пошло не так"))
+                bot.execute(SendMessage(chatId, "Что-то пошло не так")).messageId
             }
         }
     }
@@ -63,7 +99,7 @@ class DefaultTelegramExecutorService(
         return additionalText + "\n\n" + formatUsername
     }
 
-    override fun sendTextMessage(chatId: String, text: String, replyToMessageId: Int?) {
+    override fun sendTextMessage(chatId: String, text: String, replyToMessageId: Int?): Int {
         val message = SendMessage()
         message.text = text
         message.chatId = chatId
@@ -71,49 +107,50 @@ class DefaultTelegramExecutorService(
         message.disableWebPagePreview = true
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
         message.disableWebPagePreview = true
-        bot.execute(message)
-        logger.info("Send text message to $chatId")
+        return bot.execute(message).messageId
     }
 
-    override fun sendPhotoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?) {
+    override fun sendPhotoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int {
         val message = SendPhoto()
         message.chatId = chatId
         message.caption = textMessage
         message.photo = InputFile(url)
         message.parseMode = "html"
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        bot.execute(message)
-        logger.info("Send photo message to $chatId")
+        return bot.execute(message).messageId
     }
 
-    override fun sendAnimatedMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?) {
+    override fun sendAnimatedMessageByUrl(
+        chatId: String,
+        textMessage: String,
+        url: String,
+        replyToMessageId: Int?,
+    ): Int {
         val message = SendAnimation()
         message.chatId = chatId
         message.caption = textMessage
         message.animation = InputFile(url)
         message.parseMode = "html"
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        bot.execute(message)
-        logger.info("Send animated message to $chatId")
+        return bot.execute(message).messageId
     }
 
-    override fun sendVideoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?) {
+    override fun sendVideoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int {
         val message = SendVideo()
         message.chatId = chatId
         message.caption = textMessage
         message.video = InputFile(url)
         message.parseMode = "html"
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        bot.execute(message)
-        logger.info("Send video message to $chatId")
+        return bot.execute(message).messageId
     }
 
     override fun sendManyMediaMessageByUrls(
         chatId: String,
         textMessage: String,
         urls: List<String>,
-        replyToMessageId: Int?
-    ) {
+        replyToMessageId: Int?,
+    ): Int {
         val message = SendMediaGroup()
         message.chatId = chatId
         val listMedia = arrayListOf<InputMedia>()
@@ -129,8 +166,7 @@ class DefaultTelegramExecutorService(
             listMedia.add(media)
         }
         message.medias = listMedia
-        bot.execute(message)
-        logger.info("Send many media message to $chatId")
+        return bot.execute(message).map { it.messageId }.first()
     }
 
     override fun sendStickerMessage(chatId: String, stickerId: String) {
@@ -182,6 +218,17 @@ class DefaultTelegramExecutorService(
 
                 if (typeCommand.last) "Последний лайк $htmlUserNameAction на $htmlTweet от $htmlAuthor"
                 else "Лайк $htmlUserNameAction на $htmlTweet от $htmlAuthor"
+            }
+            is TypeCommand.Tweet -> {
+                val tweet = twitterClientService.getTweetById(typeCommand.tweetId)
+                val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
+                val tweetLink = twitterClientService.getLinkOnTweet(typeCommand.tweetId, tweetAuthor)
+                val tweetHtml = "<a href=\"$tweetLink\">Твит</a>"
+                val tweetAuthorLink = twitterClientService.urlUser(tweetAuthor)
+                val htmlAuthor = "<a href=\"$tweetAuthorLink\">$tweetAuthor</a>"
+                var text = "$tweetHtml от $htmlAuthor"
+                if (typeCommand.author != null) text += " by ${typeCommand.author}"
+                return text
             }
         }
 

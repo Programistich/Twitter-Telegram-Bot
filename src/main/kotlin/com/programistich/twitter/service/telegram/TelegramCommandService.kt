@@ -6,7 +6,7 @@ interface TelegramCommandService {
 
     fun startCommand(chatId: String)
     fun newTwitterUserCommand(message: Message, username: String?)
-    fun lastLikeTweetByUsernameCommand(message: Message, username: String)
+    fun lastLikeByUsernameCommand(message: Message, username: String)
     fun pingCommand(chatId: String)
     fun getTweetCommand(message: Message, link: String?)
     fun donateCommand(message: Message)

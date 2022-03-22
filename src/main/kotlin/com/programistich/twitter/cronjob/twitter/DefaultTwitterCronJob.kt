@@ -18,35 +18,55 @@ class DefaultTwitterCronJob(
     private val defaultDatabaseTwitterUserService: DefaultDatabaseTwitterUserService,
     private val databaseTelegramChatService: DefaultDatabaseTelegramChatService,
     private val defaultTwitterClientService: DefaultTwitterClientService,
-    private val telegramExecutorService: DefaultTelegramExecutorService
+    private val telegramExecutorService: DefaultTelegramExecutorService,
 ) : TwitterCronJob {
 
     private val logger = LoggerFactory.getLogger(DefaultTwitterCronJob::class.java)
 
     @Scheduled(fixedDelay = 5 * 60 * 1000)
     fun updateTwitter() {
-        updateTwitterLikesForAllUsernames()
+        updateTwitterForAllUsernames()
     }
 
-    override fun updateTwitterLikesForAllUsernames() {
+    override fun updateTwitterForAllUsernames() {
         logger.info("Start updater likes")
         val usernames = defaultDatabaseTwitterUserService.getAllUsername()
         usernames.forEach {
-            updateTwitterLikeForUsername(it)
+            val existUsername = defaultDatabaseTwitterUserService.existUser(it)
+            if (!existUsername) {
+                logger.info("Username = $it not found in db")
+                return
+            }
+            val tweetInDB = defaultDatabaseTwitterUserService.getTwitterUserByUsername(it)
+            updateLikeForUsername(it, tweetInDB)
+            updateTweetForUsername(it, tweetInDB)
         }
         logger.info("End updater likes")
     }
 
-    fun updateTwitterLikeForUsername(username: String) {
-        val existUsername = defaultDatabaseTwitterUserService.existUser(username)
-        if (!existUsername) {
-            logger.info("Username = $username not found in db")
-            return
+    private fun updateTweetForUsername(username: String, tweetInDB: TwitterUser?) {
+        val tweetInTwitter: Tweet = defaultTwitterClientService.lastTweetByUsername(username)
+        if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastTweetId) {
+            logger.info("New tweet from $username id = $tweetInTwitter.id")
+            val twitterUser = TwitterUser(
+                username = username,
+                lastLikeId = tweetInDB!!.lastLikeId,
+                lastTweetId = tweetInTwitter.id,
+                chats = tweetInDB.chats
+            )
+            defaultDatabaseTwitterUserService.updateTwitterUser(twitterUser)
+            logger.info("Update username = $username")
+            val chats = databaseTelegramChatService.getChatsByUsername(username)
+            chats.map {
+                logger.info("Send tweet to $it")
+                telegramExecutorService.sendTweetEntryPoint(tweetInTwitter.id, it)
+            }
         }
+    }
 
-        val tweetInDB = defaultDatabaseTwitterUserService.getTwitterUserByUsername(username)
-        val tweetInTwitter: Tweet = defaultTwitterClientService.lastLikeTweetByUsername(username)
 
+    private fun updateLikeForUsername(username: String, tweetInDB: TwitterUser?) {
+        val tweetInTwitter: Tweet = defaultTwitterClientService.lastLikeByUsername(username)
         if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastLikeId) {
             logger.info("New tweet from $username id = $tweetInTwitter.id")
             val twitterUser = TwitterUser(

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import twitter4j.Twitter
 import twitter4j.TwitterException
 
 @Service
@@ -22,7 +23,8 @@ class DefaultTelegramCommandService(
     private val dataBaseTwitterUserServiceDefault: DatabaseTwitterUserService,
     private val twitterClientService: TwitterClientService,
     private val telegramExecutorService: TelegramExecutorService,
-    private val stocksService: StocksService
+    private val stocksService: StocksService,
+    private val twitter: Twitter,
 ) : TelegramCommandService {
 
     private val logger = LoggerFactory.getLogger(DefaultTelegramCommandService::class.java)
@@ -77,15 +79,32 @@ class DefaultTelegramCommandService(
             logger.info("Twitter user null")
             return
         }
-        twitterUser.lastLikeId = twitterClientService.lastLikeTweetByUsername(username).id
+        twitterUser.lastLikeId = twitterClientService.lastLikeByUsername(username).id
+        twitterUser.lastTweetId = twitterClientService.lastTweetByUsername(username).id
         chat.twitterUsers.add(twitterUser)
         twitterUser.chats.add(chat)
         dataBaseTelegramChatService.updateChat(chat)
-        lastLikeTweetByUsernameCommand(message, username)
+        lastLikeByUsernameCommand(message, username)
+        lastTweetByUsernameCommand(message, username)
         logger.info("Username = $username add to chat id = $chatId")
     }
 
-    override fun lastLikeTweetByUsernameCommand(message: Message, username: String) {
+    private fun lastTweetByUsernameCommand(message: Message, username: String) {
+        val chatId = message.id()
+        val idLast = dataBaseTwitterUserServiceDefault.lastTweetByUsername(username)
+        if (idLast == null) {
+            logger.info("last tweet by $username not found")
+            return
+        }
+        telegramExecutorService.sendTweetEntryPoint(
+            tweetId = idLast,
+            chatId = chatId,
+            author = message.from.firstName
+        )
+        logger.info("Send message $idLast to $chatId")
+    }
+
+    override fun lastLikeByUsernameCommand(message: Message, username: String) {
         val chatId = message.id()
         val messageId = message.messageId
         val idLast = dataBaseTwitterUserServiceDefault.lastLikeByUsername(username)
@@ -123,9 +142,11 @@ class DefaultTelegramCommandService(
             }
             val id = result.toLong()
             logger.info("get post with id = $id")
-            val typeMessage = twitterClientService.parseTweet(id)
-            val typeTweet = TypeCommand.Get(username, link, author)
-            telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet, messageId)
+            telegramExecutorService.sendTweetEntryPoint(
+                tweetId = id,
+                chatId = chatId,
+                author = message.from.firstName
+            )
             telegramExecutorService.deleteMessage(chatId, message.messageId)
         } catch (e: TelegramApiException) {
             logger.info("Error " + e.message)

@@ -32,13 +32,13 @@ class DefaultTelegramExecutorService(
         return ids.filterNotNull().firstOrNull()
     }
 
-    override fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String?){
+    override fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String?, isNew: Boolean) {
         val username = twitterClientService.getUserNameByTweetId(tweetId)
         val newMessageId = sendTweet(tweetId, chatId, null)
         sendTweet(
             chatId = chatId,
             typeMessage = twitterClientService.parseTweet(tweetId),
-            typeCommand = TypeCommand.Tweet(username, tweetId, author),
+            typeCommand = TypeCommand.Tweet(username, tweetId, author, isNew),
             replyToMessageId = newMessageId
         )
     }
@@ -228,6 +228,7 @@ class DefaultTelegramExecutorService(
                 val htmlAuthor = "<a href=\"$tweetAuthorLink\">$tweetAuthor</a>"
                 var text = "$tweetHtml от $htmlAuthor"
                 if (typeCommand.author != null) text += " by ${typeCommand.author}"
+                if(typeCommand.last) text = "Последний $text"
                 return text
             }
         }

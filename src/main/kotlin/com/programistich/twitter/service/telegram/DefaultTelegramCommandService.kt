@@ -99,7 +99,8 @@ class DefaultTelegramCommandService(
         telegramExecutorService.sendTweetEntryPoint(
             tweetId = idLast,
             chatId = chatId,
-            author = message.from.firstName
+            author = message.from.firstName,
+            isNew = true
         )
         logger.info("Send message $idLast to $chatId")
     }
@@ -114,7 +115,7 @@ class DefaultTelegramCommandService(
         }
         val typeMessage = twitterClientService.parseTweet(idLast)
         val typeTweet = TypeCommand.Like(username, idLast, true)
-        telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet, messageId)
+        telegramExecutorService.sendTweet(chatId, typeMessage, typeTweet)
         logger.info("Send message $idLast to $chatId")
     }
 
@@ -145,7 +146,7 @@ class DefaultTelegramCommandService(
             telegramExecutorService.sendTweetEntryPoint(
                 tweetId = id,
                 chatId = chatId,
-                author = message.from.firstName
+                author = author
             )
             telegramExecutorService.deleteMessage(chatId, message.messageId)
         } catch (e: TelegramApiException) {

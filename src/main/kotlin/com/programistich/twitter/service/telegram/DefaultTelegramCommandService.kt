@@ -178,7 +178,7 @@ class DefaultTelegramCommandService(
         val messageId = message.messageId
         telegramExecutorService.sendTextMessage(
             chatId,
-            "Есть несколько вариантов поддержки:\n<a href=\"https://send.monobank.ua/jar/9B7DzKsjk7\">Банка монобанка</a>\nКарта Моно <pre>4441114440821211</pre>\nКарта YooMoney <pre>4048025000163488</pre>\nКрипта <pre>0xf6A2255f333EF47845BaCfD26A0bEaaD296B9019</pre>"
+            "Есть несколько вариантов поддержки:\n<a href=\"https://send.monobank.ua/jar/9VVjaU8Pwg\">Банка MonoBank</a>\nКарта MonoBank <code>4441114440821211</code>\nКарта YooMoney <code>4048025000163488</code>\nКриптовалюта ETH <pre>0xf6A2255f333EF47845BaCfD26A0bEaaD296B9019</pre>"
         )
         telegramExecutorService.sendStickerMessage(
             chatId,

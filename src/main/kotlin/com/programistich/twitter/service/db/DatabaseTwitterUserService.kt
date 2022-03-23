@@ -1,6 +1,6 @@
 package com.programistich.twitter.service.db
 
-import com.programistich.twitter.model.TwitterUser
+import com.programistich.twitter.entity.TwitterUser
 
 interface DatabaseTwitterUserService {
     fun existUser(username: String): Boolean

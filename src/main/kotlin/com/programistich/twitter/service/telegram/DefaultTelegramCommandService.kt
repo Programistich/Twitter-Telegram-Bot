@@ -2,8 +2,8 @@ package com.programistich.twitter.service.telegram
 
 import com.programistich.twitter.common.Extensions.id
 import com.programistich.twitter.common.TypeCommand
-import com.programistich.twitter.model.TelegramChat
-import com.programistich.twitter.model.TwitterUser
+import com.programistich.twitter.entity.TelegramChat
+import com.programistich.twitter.entity.TwitterUser
 import com.programistich.twitter.service.db.DatabaseTelegramChatService
 import com.programistich.twitter.service.db.DatabaseTwitterUserService
 import com.programistich.twitter.service.stocks.StocksService
@@ -99,7 +99,6 @@ class DefaultTelegramCommandService(
         telegramExecutorService.sendTweetEntryPoint(
             tweetId = idLast,
             chatId = chatId,
-            author = message.from.firstName,
             isNew = true
         )
         logger.info("Send message $idLast to $chatId")

@@ -5,6 +5,8 @@ services:
     container_name: twitter-db
     image: postgres:14
     restart: always
+    networks:
+      twitter-net:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./db.sql:/docker-entrypoint-initdb.d/db.sql
@@ -24,6 +26,8 @@ services:
       - PGADMIN_DEFAULT_EMAIL=root@root.com
       - PGADMIN_DEFAULT_PASSWORD=root
     restart: always
+    networks:
+      twitter-net:
     ports:
       - "5050:80"
 
@@ -33,6 +37,8 @@ services:
       dockerfile: Dockerfile
       context: .
     restart: always
+    networks:
+      twitter-net:
     environment:
       - JDBC_URL=jdbc:postgresql://twitter-db:5432/${POSTGRES_DB}
       - POSTGRES_USER
@@ -51,3 +57,6 @@ services:
 volumes:
   postgres-data:
   pgadmin-data:
+
+networks:
+  twitter-net:

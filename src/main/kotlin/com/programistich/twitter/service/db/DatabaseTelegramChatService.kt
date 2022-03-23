@@ -1,6 +1,6 @@
 package com.programistich.twitter.service.db
 
-import com.programistich.twitter.model.TelegramChat
+import com.programistich.twitter.entity.TelegramChat
 
 interface DatabaseTelegramChatService {
     fun existChat(chatId: String): Boolean

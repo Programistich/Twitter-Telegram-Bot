@@ -33,12 +33,11 @@ class DefaultTelegramExecutorService(
     }
 
     override fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String?, isNew: Boolean) {
-        val username = twitterClientService.getUserNameByTweetId(tweetId)
         val newMessageId = sendTweet(tweetId, chatId, null)
         sendTweet(
             chatId = chatId,
             typeMessage = twitterClientService.parseTweet(tweetId),
-            typeCommand = TypeCommand.Tweet(username, tweetId, author, isNew),
+            typeCommand = if(author == null) TypeCommand.Tweet(tweetId, isNew) else TypeCommand.Get(tweetId, author),
             replyToMessageId = newMessageId
         )
     }
@@ -48,11 +47,10 @@ class DefaultTelegramExecutorService(
         val id = tweet.newId()
         if (id != null) {
             val newMessageId = sendTweet(id, chatId, messageId)
-            val username = twitterClientService.getUserNameByTweetId(id)
             return sendTweet(
                 chatId = chatId,
                 typeMessage = twitterClientService.parseTweet(id),
-                typeCommand = TypeCommand.Tweet(username, id),
+                typeCommand = TypeCommand.Tweet(id),
                 replyToMessageId = newMessageId
             )
         }
@@ -191,45 +189,33 @@ class DefaultTelegramExecutorService(
     }
 
     private fun headerText(typeCommand: TypeCommand): String {
+        val tweet = twitterClientService.parseTweetForTelegram(typeCommand.tweetId)
         return when (typeCommand) {
             is TypeCommand.Get -> {
-                val nameUser = twitterClientService.nameUser(typeCommand.username)
-                val linkUser = twitterClientService.urlUser(typeCommand.username)
-                val htmlUsername = "<a href=\"$linkUser\">$nameUser</a>"
-
-                val author = typeCommand.author
-                val link = typeCommand.link
-                val htmlLink = "<a href=\"$link\">ссылке</a>"
-
-                "Твит по $htmlLink от $htmlUsername by $author"
+                val htmlLinkAuthor = tweet.author.html()
+                val htmlLinkTweet = tweet.html("Твит")
+                val telegramUser = typeCommand.author
+                "$htmlLinkTweet от $htmlLinkAuthor by $telegramUser"
             }
             is TypeCommand.Like -> {
-                val nameAction = twitterClientService.nameUser(typeCommand.username)
-                val linkOnUserAction = twitterClientService.urlUser(typeCommand.username)
-                val htmlUserNameAction = "<a href=\"$linkOnUserAction\">$nameAction</a>"
+                val htmlLinkAuthor = tweet.author.html()
+                val htmlLinkTweet = tweet.html("твит")
+                val linkWhoLiked = twitterClientService.urlUser(typeCommand.username)
+                val htmlLinkWhoLiked = "<a href=\"$linkWhoLiked\">${typeCommand.username}</a>"
 
-                val tweet = twitterClientService.getTweetById(typeCommand.tweetId)
-                val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
-                val tweetAuthorLink = twitterClientService.urlUser(tweetAuthor)
-                val htmlAuthor = "<a href=\"$tweetAuthorLink\">$tweetAuthor</a>"
-
-                val tweetLink = twitterClientService.getLinkOnTweet(typeCommand.tweetId, tweetAuthor)
-                val htmlTweet = "<a href=\"$tweetLink\">твит</a>"
-
-                if (typeCommand.last) "Последний лайк $htmlUserNameAction на $htmlTweet от $htmlAuthor"
-                else "Лайк $htmlUserNameAction на $htmlTweet от $htmlAuthor"
+                if (typeCommand.last) "Последний лайк $htmlLinkWhoLiked на $htmlLinkTweet от $htmlLinkAuthor"
+                else "Лайк $htmlLinkWhoLiked на $htmlLinkTweet от $htmlLinkAuthor"
             }
             is TypeCommand.Tweet -> {
-                val tweet = twitterClientService.getTweetById(typeCommand.tweetId)
-                val tweetAuthor = twitterClientService.getAuthorForTweet(tweet)
-                val tweetLink = twitterClientService.getLinkOnTweet(typeCommand.tweetId, tweetAuthor)
-                val tweetHtml = "<a href=\"$tweetLink\">Твит</a>"
-                val tweetAuthorLink = twitterClientService.urlUser(tweetAuthor)
-                val htmlAuthor = "<a href=\"$tweetAuthorLink\">$tweetAuthor</a>"
-                var text = "$tweetHtml от $htmlAuthor"
-                if (typeCommand.author != null) text += " by ${typeCommand.author}"
-                if(typeCommand.last) text = "Последний $text"
-                return text
+                val htmlLinkAuthor = tweet.author.html()
+                if(typeCommand.last){
+                    val htmlLinkTweet = tweet.html("Последний твит")
+                    "$htmlLinkTweet от $htmlLinkAuthor"
+                }
+                else {
+                    val htmlLinkTweet = tweet.html("Твит")
+                    "$htmlLinkTweet от $htmlLinkAuthor"
+                }
             }
         }
 

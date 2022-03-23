@@ -1,4 +1,4 @@
-package com.programistich.twitter.model
+package com.programistich.twitter.entity
 
 import javax.persistence.*
 

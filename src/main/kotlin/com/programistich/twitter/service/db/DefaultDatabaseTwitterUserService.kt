@@ -1,6 +1,6 @@
 package com.programistich.twitter.service.db
 
-import com.programistich.twitter.model.TwitterUser
+import com.programistich.twitter.entity.TwitterUser
 import com.programistich.twitter.repository.TwitterUserRepository
 import org.springframework.stereotype.Service
 

@@ -51,10 +51,14 @@ class TelegramBotRouting(
     }
 
     private fun isTweet(message: String, onAction: (Long) -> Unit) {
-        val idTweet = message
-            .replace(".*status/".toRegex(), "")
-            .replace("\\W.*".toRegex(), "")
-            .replace("\\D.*".toRegex(), "")
-        onAction.invoke(idTweet.toLong())
+        runCatching {
+            if(message.contains("twitter.com") && message.contains("status")){
+                val idTweet = message
+                    .replace(".*status/".toRegex(), "")
+                    .replace("\\W.*".toRegex(), "")
+                    .replace("\\D.*".toRegex(), "")
+                onAction.invoke(idTweet.toLong())
+            }
+        }
     }
 }

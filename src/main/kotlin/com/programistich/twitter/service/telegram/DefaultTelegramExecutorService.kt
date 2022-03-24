@@ -217,8 +217,8 @@ class DefaultTelegramExecutorService(
             is TypeCommand.Like -> {
                 val htmlLinkAuthor = tweet.author.html()
                 val htmlLinkTweet = tweet.html("твит")
-                val linkWhoLiked = twitterClientService.urlUser(tweet.author.username)
-                val htmlLinkWhoLiked = "<a href=\"$linkWhoLiked\">${tweet.author.name}</a>"
+                val linkWhoLiked = twitterClientService.urlUser(typeCommand.whoLiked)
+                val htmlLinkWhoLiked = "<a href=\"$linkWhoLiked\">${typeCommand.whoLiked}</a>"
 
                 if (typeCommand.last) "Последний лайк $htmlLinkWhoLiked на $htmlLinkTweet от $htmlLinkAuthor"
                 else "Лайк $htmlLinkWhoLiked на $htmlLinkTweet от $htmlLinkAuthor"

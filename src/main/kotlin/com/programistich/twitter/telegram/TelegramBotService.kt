@@ -115,7 +115,7 @@ class TelegramBotService(
         twitterUser?.let { user ->
             user.lastLikeId?.let {
                 val typeMessage = twitterClientService.parseTweet(it)
-                val typeTweet = TypeCommand.Like(it, true)
+                val typeTweet = TypeCommand.Like(username, it, true)
                 bot.sendTweet(chatId, typeMessage, typeTweet)
             }
         }

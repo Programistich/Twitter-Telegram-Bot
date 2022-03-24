@@ -81,7 +81,7 @@ class DefaultTwitterCronJob(
             val chats = databaseTelegramChatService.getChatsByUsername(username)
             chats.map {
                 logger.info("Send tweet to $it")
-                val typeTweet = TypeCommand.Like(username, tweetInTwitter.id)
+                val typeTweet = TypeCommand.Like(tweetInTwitter.id)
                 telegramExecutorService.sendTweet(it, parsedTweet, typeTweet)
             }
         }

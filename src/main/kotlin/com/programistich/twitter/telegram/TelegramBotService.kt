@@ -148,6 +148,10 @@ class TelegramBotService(
                 chatId = chatId,
                 author = user
             )
+            bot.deleteMessage(
+                chatId = chatId,
+                messageId = update.message.messageId
+            )
         } else {
             val text = template.getTemplate(template = Template.TWEET_NOT_FOUND)
             logger.info("Tweet by id $tweetId not found")

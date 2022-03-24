@@ -45,6 +45,7 @@ class DefaultTwitterCronJob(
     }
 
     private fun updateTweetForUsername(username: String, tweetInDB: TwitterUser?) {
+        logger.info("Update twitter account $username")
         val tweetInTwitter: Tweet = twitterClientService.lastTweetByUsername(username)
         if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastTweetId) {
             logger.info("New tweet from $username id = $tweetInTwitter.id")

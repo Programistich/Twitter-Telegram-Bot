@@ -23,8 +23,8 @@ class TelegramBotInstance(
     }
 
     override fun onUpdateReceived(update: Update?) {
-        if(update == null) throw NullPointerException("Telegram update null")
         logger.info("$update")
+        if(update == null) throw NullPointerException("Telegram update null")
         telegramBotRouting.entryPointUpdate(update)
     }
 }

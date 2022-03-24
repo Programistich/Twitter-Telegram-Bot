@@ -2,7 +2,7 @@ package com.programistich.twitter.service.telegram
 
 import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.common.TypeMessageTelegram
-import com.programistich.twitter.configuration.telegram.Bot
+import com.programistich.twitter.telegram.TelegramBotInstance
 import com.programistich.twitter.service.translate.TranslateService
 import com.programistich.twitter.service.twitter.TwitterClientService
 import org.slf4j.LoggerFactory
@@ -17,7 +17,7 @@ import twitter4j.Tweet
 
 @Service
 class DefaultTelegramExecutorService(
-    private val bot: Bot,
+    private val telegramBotInstance: TelegramBotInstance,
     private val twitterClientService: TwitterClientService,
     private val translateService: TranslateService,
 ) : TelegramExecutorService {
@@ -86,7 +86,7 @@ class DefaultTelegramExecutorService(
                 sendManyMediaMessageByUrls(chatId, textMessage, typeMessage.urlsMedia, replyToMessageId)
             }
             else -> {
-                bot.execute(SendMessage(chatId, "Что-то пошло не так")).messageId
+                telegramBotInstance.execute(SendMessage(chatId, "Что-то пошло не так")).messageId
             }
         }
     }
@@ -105,7 +105,7 @@ class DefaultTelegramExecutorService(
         message.disableWebPagePreview = true
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
         message.disableWebPagePreview = true
-        return bot.execute(message).messageId
+        return telegramBotInstance.execute(message).messageId
     }
 
     override fun sendPhotoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int {
@@ -115,7 +115,7 @@ class DefaultTelegramExecutorService(
         message.photo = InputFile(url)
         message.parseMode = "html"
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        return bot.execute(message).messageId
+        return telegramBotInstance.execute(message).messageId
     }
 
     override fun sendAnimatedMessageByUrl(
@@ -130,7 +130,7 @@ class DefaultTelegramExecutorService(
         message.animation = InputFile(url)
         message.parseMode = "html"
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        return bot.execute(message).messageId
+        return telegramBotInstance.execute(message).messageId
     }
 
     override fun sendVideoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int {
@@ -140,7 +140,16 @@ class DefaultTelegramExecutorService(
         message.video = InputFile(url)
         message.parseMode = "html"
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        return bot.execute(message).messageId
+        return try {
+            telegramBotInstance.execute(message).messageId
+        } catch (exception: TelegramApiException){
+            logger.info("Exception with $url exc $exception")
+            sendTextMessage(
+                chatId = chatId,
+                text = "Что-то пошло не так",
+                replyToMessageId = replyToMessageId
+            )
+        }
     }
 
     override fun sendManyMediaMessageByUrls(
@@ -164,14 +173,14 @@ class DefaultTelegramExecutorService(
             listMedia.add(media)
         }
         message.medias = listMedia
-        return bot.execute(message).map { it.messageId }.first()
+        return telegramBotInstance.execute(message).map { it.messageId }.first()
     }
 
     override fun sendStickerMessage(chatId: String, stickerId: String) {
         val message = SendSticker()
         message.chatId = chatId
         message.sticker = InputFile(stickerId)
-        bot.execute(message)
+        telegramBotInstance.execute(message)
         logger.info("Send sticker message to $chatId")
     }
 
@@ -180,7 +189,7 @@ class DefaultTelegramExecutorService(
             val delete = DeleteMessage()
             delete.chatId = chatId
             delete.messageId = messageId
-            bot.execute(delete)
+            telegramBotInstance.execute(delete)
             logger.info("Delete message in $chatId")
         } catch (e: TelegramApiException) {
             logger.info("Cant delete msg")

@@ -29,7 +29,7 @@ class DefaultTwitterCronJob(
     }
 
     override fun updateTwitterForAllUsernames() {
-        logger.info("Start updater likes")
+        logger.info("Start update twitter accounts")
         val usernames = defaultDatabaseTwitterUserService.getAllUsername()
         usernames.forEach {
             val existUsername = defaultDatabaseTwitterUserService.existUser(it)
@@ -41,7 +41,7 @@ class DefaultTwitterCronJob(
             updateLikeForUsername(it, tweetInDB)
             updateTweetForUsername(it, tweetInDB)
         }
-        logger.info("End updater likes")
+        logger.info("End update twitter accounts")
     }
 
     private fun updateTweetForUsername(username: String, tweetInDB: TwitterUser?) {

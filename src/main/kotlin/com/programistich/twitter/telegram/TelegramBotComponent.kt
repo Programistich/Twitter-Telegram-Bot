@@ -1,4 +1,4 @@
-package com.programistich.twitter.configuration.telegram
+package com.programistich.twitter.telegram
 
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
@@ -13,10 +13,10 @@ class TelegramBotComponent {
     fun botConfig() = DefaultBotOptions()
 
     @Bean
-    fun telegramBot(bot: Bot): TelegramBotsApi {
+    fun telegramBot(telegramBotInstance: TelegramBotInstance): TelegramBotsApi {
         val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)
-        telegramBotsApi.registerBot(bot)
-        bot.clearWebhook()
+        telegramBotsApi.registerBot(telegramBotInstance)
+        telegramBotInstance.clearWebhook()
         return telegramBotsApi
     }
 

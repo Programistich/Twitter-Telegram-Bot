@@ -1,4 +1,4 @@
-package com.programistich.twitter.configuration.twitter
+package com.programistich.twitter.twitter
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean

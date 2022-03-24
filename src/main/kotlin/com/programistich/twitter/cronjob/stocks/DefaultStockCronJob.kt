@@ -9,13 +9,10 @@ import org.springframework.stereotype.Service
 @Service
 class DefaultStockCronJob(
     private val stockService: StocksService,
-    private val databaseTelegramChatService: DatabaseTelegramChatService
 ) : StockCronJob {
 
     @Scheduled(cron = "0 0 22 * * *")
     override fun getTeslaStocks() {
-        databaseTelegramChatService.getAllChats().forEach {
-            stockService.sendStock(it.chatId, null, stockService.getStock("TSLA"))
-        }
+        stockService.sendStock("-1001488807577", null, stockService.getStock("TSLA"))
     }
 }

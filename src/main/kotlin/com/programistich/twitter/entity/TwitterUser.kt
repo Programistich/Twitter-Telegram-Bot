@@ -28,4 +28,8 @@ class TwitterUser(
         inverseJoinColumns = [JoinColumn(name = "chat_id")]
     )
     var chats: MutableSet<TelegramChat> = hashSetOf()
-)
+){
+    override fun toString(): String {
+        return "TwitterUser(username='$username', lastTweetId=$lastTweetId, lastLikeId=$lastLikeId)"
+    }
+}

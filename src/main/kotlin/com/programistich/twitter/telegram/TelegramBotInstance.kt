@@ -1,15 +1,14 @@
-package com.programistich.twitter.configuration.telegram
+package com.programistich.twitter.telegram
 
-import com.programistich.twitter.routing.DefaultRouter
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 
 @Component
-class Bot(
+class TelegramBotInstance(
     private val telegramBotConfiguration: TelegramBotConfiguration,
-    @Lazy private val defaultRouter: DefaultRouter
+    @Lazy private val telegramBotRouting: TelegramBotRouting
 ) : TelegramLongPollingBot() {
 
     override fun getBotToken(): String {
@@ -20,9 +19,8 @@ class Bot(
         return telegramBotConfiguration.username
     }
 
-    override fun onUpdateReceived(update: Update) {
-        if (update.hasMessage()) {
-            defaultRouter.parseMessage(update)
-        }
+    override fun onUpdateReceived(update: Update?) {
+        if(update == null) throw NullPointerException("Telegram update null")
+        telegramBotRouting.entryPointUpdate(update)
     }
 }

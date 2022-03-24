@@ -1,4 +1,4 @@
-package com.programistich.twitter.repository
+package com.programistich.twitter.repository.jpa
 
 import com.programistich.twitter.entity.TwitterUser
 import org.springframework.data.jpa.repository.JpaRepository

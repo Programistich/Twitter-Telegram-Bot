@@ -1,7 +1,7 @@
 package com.programistich.twitter.service.db
 
 import com.programistich.twitter.entity.TelegramChat
-import com.programistich.twitter.repository.TelegramChatRepository
+import com.programistich.twitter.repository.jpa.TelegramChatRepository
 import org.springframework.stereotype.Service
 
 @Service
@@ -20,6 +20,10 @@ class DefaultDatabaseTelegramChatService(
 
     override fun createChat(chat: TelegramChat) {
         telegramChatRepository.save(chat)
+    }
+
+    override fun createChat(chatId: String) {
+        telegramChatRepository.save(TelegramChat(chatId))
     }
 
     override fun updateChat(chat: TelegramChat) {

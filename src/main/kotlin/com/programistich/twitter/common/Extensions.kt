@@ -1,5 +1,6 @@
 package com.programistich.twitter.common
 
+import com.programistich.twitter.telegram.TelegramBotCommand
 import org.telegram.telegrambots.meta.api.objects.EntityType
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -18,25 +19,25 @@ object Extensions {
         return this.message.text
     }
 
-    fun Update.getCommand(botName: String): Command? {
+    fun Update.getCommand(botName: String): TelegramBotCommand? {
         val entities = this.message.entities ?: return null
         for (entity in entities) {
             if (entity.offset == 0 && entity.type == EntityType.BOTCOMMAND) {
                 val parts = entity.text.split("@")
                 if (parts.size == 1) {
-                    return Command.LOOKUP[parts[0]]
+                    return TelegramBotCommand.LOOKUP[parts[0]]
                 }
                 if (parts[1] == botName) {
-                    return Command.LOOKUP[parts[0]]
+                    return TelegramBotCommand.LOOKUP[parts[0]]
                 }
             }
         }
         return null
     }
 
-    fun Message.deleteCommand(botName: String, commandName: Command): String? {
+    fun Message.deleteCommand(botName: String, telegramBotCommandName: TelegramBotCommand): String? {
         val entities = entities ?: return null
-        val command = commandName.command
+        val command = telegramBotCommandName.value
         for (entity in entities) {
             if (entity.offset == 0 && entity.type == EntityType.BOTCOMMAND) {
                 val parts = entity.text.split("@")

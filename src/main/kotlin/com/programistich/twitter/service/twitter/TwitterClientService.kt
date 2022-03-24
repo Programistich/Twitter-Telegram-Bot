@@ -54,31 +54,20 @@ class TwitterClientService(
 
 
     fun existUsernameInTwitter(username: String): Boolean {
-        return try {
+        return kotlin.runCatching {
             twitter.showUser(username)
-            true
-        } catch (e: TwitterException) {
-            false
-        }
+        }.isSuccess
     }
-
-
-    fun getUserNameByTweetId(tweetId: Long): String {
-        val tweet = getTweetById(tweetId)
-        val user = twitter.showUser(tweet.authorId!!)
-        return user.name
-    }
-
 
     fun lastLikeByUsername(username: String): Tweet {
         val user = twitter.showUser(username)
         return twitter.getLikedTweets(userId = user.id, maxResults = 5).tweets[0]
     }
 
-
     fun lastTweetByUsername(username: String): Tweet {
         val status = twitter.getUserTimeline(username).first()
-        return twitter.getTweets(status.id).tweets[0]
+        val tweet = twitter.getTweets(status.id)
+        return tweet.tweets[0]
     }
 
 
@@ -178,6 +167,12 @@ class TwitterClientService(
 
     fun getLinkOnTweet(tweetId: Long, username: String): String {
         return "https://twitter.com/$username/status/$tweetId"
+    }
+
+    fun existTweetId(tweetId: Long): Boolean {
+        return runCatching {
+            getTweetById(tweetId)
+        }.isSuccess
     }
 
 }

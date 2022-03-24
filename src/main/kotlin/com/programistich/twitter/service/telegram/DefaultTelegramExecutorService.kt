@@ -5,6 +5,7 @@ import com.programistich.twitter.common.TypeMessageTelegram
 import com.programistich.twitter.telegram.TelegramBotInstance
 import com.programistich.twitter.service.translate.TranslateService
 import com.programistich.twitter.service.twitter.TwitterClientService
+import com.programistich.twitter.unshortener.UnShortenerService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.methods.send.*
@@ -20,6 +21,7 @@ class DefaultTelegramExecutorService(
     private val telegramBotInstance: TelegramBotInstance,
     private val twitterClientService: TwitterClientService,
     private val translateService: TranslateService,
+    private val shortenerService: UnShortenerService
 ) : TelegramExecutorService {
 
     private val logger = LoggerFactory.getLogger(DefaultTelegramExecutorService::class.java)
@@ -92,7 +94,13 @@ class DefaultTelegramExecutorService(
     }
 
     private fun formatText(additionalText: String, textTweet: String): String {
-        val translateText = translateService.translateText(textTweet.trim())
+        val parseLink = textTweet.split("\\s".toRegex()).map{
+            if (it.startsWith("https://t.co/")) {
+                shortenerService.shortLink(it)
+            }
+            else it
+        }.joinToString(" ")
+        val translateText = translateService.translateText(parseLink.trim())
         val formatUsername = twitterClientService.usernameToLink(translateText)
         return additionalText + "\n\n" + formatUsername
     }

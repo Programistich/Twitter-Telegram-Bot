@@ -17,20 +17,6 @@ services:
     ports:
       - "5432:5432"
 
-  twitter-pgadmin:
-    container_name: twitter-pgadmin
-    image: dpage/pgadmin4
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=root@root.com
-      - PGADMIN_DEFAULT_PASSWORD=root
-    restart: always
-    networks:
-      twitter-net:
-    ports:
-      - "5050:80"
-
   twitter:
     container_name: twitter
     build:

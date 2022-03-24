@@ -23,7 +23,7 @@ class TelegramBotInstance(
     }
 
     override fun onUpdateReceived(update: Update) {
-        logger.info("$update")
+        logger.info("${update.updateId}")
         telegramBotRouting.entryPointUpdate(update)
     }
 }

@@ -11,12 +11,13 @@ class TelegramBotRouting(
 ) {
 
     fun entryPointUpdate(update: Update) {
-        val message: String = if (update.hasMessage()) {
+        val message: String? = if (update.hasMessage()) {
             update.message.text
         } else if (update.hasChannelPost()) {
             update.channelPost.text
         } else return
         val command = update.getCommand(botConfiguration.username)
+        if(message == null) return
         if (command != null) {
             val textCommand = message.split(" ")[0]
             val messageWithoutCommand = message.replace(textCommand, "").trim()

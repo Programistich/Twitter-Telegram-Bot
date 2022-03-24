@@ -12,7 +12,7 @@ class TelegramBotInstance(
     @Lazy private val telegramBotRouting: TelegramBotRouting
 ) : TelegramLongPollingBot() {
 
-    private val logger = LoggerFactory.getLogger(this::class.java.name)
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun getBotToken(): String {
         return telegramBotConfiguration.token

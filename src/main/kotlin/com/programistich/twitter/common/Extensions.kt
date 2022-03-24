@@ -17,9 +17,9 @@ object Extensions {
 
     fun Update.getCommand(botName: String): TelegramBotCommand? {
         val entities: MutableList<MessageEntity> = if (this.hasMessage()) {
-            this.message.entities
+            this.message?.entities ?: return null
         } else if (this.hasChannelPost()) {
-            this.channelPost.entities
+            this.channelPost?.entities ?: return null
         } else return null
         for (entity in entities) {
             if (entity.offset == 0 && entity.type == EntityType.BOTCOMMAND) {

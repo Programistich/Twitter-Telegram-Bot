@@ -11,34 +11,36 @@ class TelegramBotRouting(
 ) {
 
     fun entryPointUpdate(update: Update) {
-        if (update.hasMessage()) {
-            val message: String = update.message.text
-            val command = update.getCommand(botConfiguration.username)
-            if (command != null) {
-                val textCommand = message.split(" ")[0]
-                val messageWithoutCommand = message.replace(textCommand, "").trim()
-                when (command) {
-                    TelegramBotCommand.START -> telegramBotService.startCommand(update)
-                    TelegramBotCommand.HELP -> telegramBotService.helpCommand(update)
-                    TelegramBotCommand.PING -> telegramBotService.pingCommand(update)
-                    TelegramBotCommand.DONATE -> telegramBotService.donateCommand(update)
-                    TelegramBotCommand.ADD -> {
-                        telegramBotService.addTwitterAccountCommand(
-                            update = update,
-                            username = messageWithoutCommand
-                        )
-                    }
-                    TelegramBotCommand.GET -> {
-                        isTweet(messageWithoutCommand) { tweetId ->
-                            telegramBotService.getTweetCommand(update = update, tweetId = tweetId)
-                        }
-                    }
-                    TelegramBotCommand.STOCKS -> telegramBotService.stocksCommand(update)
+        val message: String = if (update.hasMessage()) {
+            update.message.text
+        } else if (update.hasChannelPost()) {
+            update.channelPost.text
+        } else return
+        val command = update.getCommand(botConfiguration.username)
+        if (command != null) {
+            val textCommand = message.split(" ")[0]
+            val messageWithoutCommand = message.replace(textCommand, "").trim()
+            when (command) {
+                TelegramBotCommand.START -> telegramBotService.startCommand(update)
+                TelegramBotCommand.HELP -> telegramBotService.helpCommand(update)
+                TelegramBotCommand.PING -> telegramBotService.pingCommand(update)
+                TelegramBotCommand.DONATE -> telegramBotService.donateCommand(update)
+                TelegramBotCommand.ADD -> {
+                    telegramBotService.addTwitterAccountCommand(
+                        update = update,
+                        username = messageWithoutCommand
+                    )
                 }
-            } else {
-                isTweet(message) { tweetId ->
-                    telegramBotService.getTweetCommand(update = update, tweetId = tweetId)
+                TelegramBotCommand.GET -> {
+                    isTweet(messageWithoutCommand) { tweetId ->
+                        telegramBotService.getTweetCommand(update = update, tweetId = tweetId)
+                    }
                 }
+                TelegramBotCommand.STOCKS -> telegramBotService.stocksCommand(update)
+            }
+        } else {
+            isTweet(message) { tweetId ->
+                telegramBotService.getTweetCommand(update = update, tweetId = tweetId)
             }
         }
     }
@@ -52,7 +54,7 @@ class TelegramBotRouting(
 
     private fun isTweet(message: String, onAction: (Long) -> Unit) {
         runCatching {
-            if(message.contains("twitter.com") && message.contains("status")){
+            if (message.contains("twitter.com") && message.contains("status")) {
                 val idTweet = message
                     .replace(".*status/".toRegex(), "")
                     .replace("\\W.*".toRegex(), "")

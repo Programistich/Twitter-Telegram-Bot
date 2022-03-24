@@ -8,7 +8,13 @@ import org.telegram.telegrambots.meta.api.objects.Update
 object Extensions {
 
     fun Update.id(): String {
-        return this.message.chatId.toString()
+        if (this.hasMessage()) {
+            return this.message.chatId.toString()
+        }
+        if (this.hasChannelPost()) {
+            return this.channelPost.chatId.toString()
+        }
+        return ""
     }
 
     fun Message.id(): String {
@@ -20,7 +26,11 @@ object Extensions {
     }
 
     fun Update.getCommand(botName: String): TelegramBotCommand? {
-        val entities = this.message.entities ?: return null
+        val entities = if (this.hasMessage()) {
+            this.message.entities
+        } else if (this.hasChannelPost()) {
+            this.channelPost.entities
+        } else return null
         for (entity in entities) {
             if (entity.offset == 0 && entity.type == EntityType.BOTCOMMAND) {
                 val parts = entity.text.split("@")

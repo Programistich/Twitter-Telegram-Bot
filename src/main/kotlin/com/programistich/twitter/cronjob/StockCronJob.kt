@@ -1,4 +1,4 @@
-package com.programistich.twitter.cronjob.stocks
+package com.programistich.twitter.cronjob
 
 import com.programistich.twitter.service.stocks.StocksService
 import org.springframework.scheduling.annotation.Scheduled

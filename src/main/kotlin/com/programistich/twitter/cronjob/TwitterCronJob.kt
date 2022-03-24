@@ -1,4 +1,4 @@
-package com.programistich.twitter.cronjob.twitter
+package com.programistich.twitter.cronjob
 
 import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.entity.TwitterUser

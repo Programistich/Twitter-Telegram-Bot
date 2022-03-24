@@ -3,6 +3,7 @@ package com.programistich.twitter.common
 import com.programistich.twitter.telegram.TelegramBotCommand
 import org.telegram.telegrambots.meta.api.objects.EntityType
 import org.telegram.telegrambots.meta.api.objects.Message
+import org.telegram.telegrambots.meta.api.objects.MessageEntity
 import org.telegram.telegrambots.meta.api.objects.Update
 
 object Extensions {
@@ -15,7 +16,7 @@ object Extensions {
     }
 
     fun Update.getCommand(botName: String): TelegramBotCommand? {
-        val entities = if (this.hasMessage()) {
+        val entities: MutableList<MessageEntity> = if (this.hasMessage()) {
             this.message.entities
         } else if (this.hasChannelPost()) {
             this.channelPost.entities

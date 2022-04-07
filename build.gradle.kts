@@ -45,6 +45,9 @@ dependencies {
 	implementation("org.telegram:telegrambots:5.6.0")
 	implementation("org.telegram:telegrambots-meta:5.6.0")
 
+	// Coroutines
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+
 	implementation("com.squareup.okhttp3:okhttp:4.9.3")
 	implementation("com.flickr4java:flickr4java:3.0.6")
 	implementation("com.yahoofinance-api:YahooFinanceAPI:3.15.0")

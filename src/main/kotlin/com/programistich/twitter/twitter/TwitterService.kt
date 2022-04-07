@@ -1,6 +1,9 @@
 package com.programistich.twitter.service.twitter
 
 import com.programistich.twitter.common.TypeMessageTelegram
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.springframework.stereotype.Service
 import twitter4j.*
 
@@ -8,8 +11,8 @@ data class BaseTweet(
     val id: Long,
     val url: String,
     val content: TypeMessageTelegram? = null,
-    val author: TwitterAccount
-){
+    val author: TwitterAccount,
+) {
     fun html(text: String) = "<a href=\"$url\">$text</a>"
 }
 
@@ -17,8 +20,8 @@ data class TwitterAccount(
     val id: Long,
     val name: String,
     val username: String,
-    val url: String
-){
+    val url: String,
+) {
     fun html() = "<a href=\"$url\">$name</a>"
 }
 
@@ -65,13 +68,15 @@ class TwitterService(
     }
 
     fun lastTweetByUsername(username: String): Tweet {
-        try {
-            val status = twitter.getUserTimeline(username)[0]
-            val tweet = twitter.getTweets(status.id)
-            return tweet.tweets[0]
-        }
-        catch (exception: TwitterException){
-            throw TwitterException("Status null")
+        while(true){
+            val status = twitter.getUserTimeline(username)
+            if (status.isNotEmpty()) {
+                val tweet = twitter.getTweets(status[0].id)
+                return tweet.tweets[0]
+            }
+            GlobalScope.launch {
+                delay(1000)
+            }
         }
     }
 

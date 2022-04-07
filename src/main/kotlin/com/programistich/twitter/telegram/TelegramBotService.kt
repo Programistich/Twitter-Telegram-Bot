@@ -5,6 +5,7 @@ import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.repository.Repository
 import com.programistich.twitter.service.telegram.TelegramExecutorService
 import com.programistich.twitter.service.twitter.TwitterService
+import com.programistich.twitter.stocks.StocksService
 import com.programistich.twitter.template.Template
 import com.programistich.twitter.template.TemplateReader
 import org.slf4j.LoggerFactory

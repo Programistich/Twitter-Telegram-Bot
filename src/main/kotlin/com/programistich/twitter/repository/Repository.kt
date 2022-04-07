@@ -4,15 +4,14 @@ import com.programistich.twitter.entity.TelegramChat
 import com.programistich.twitter.entity.TwitterUser
 import com.programistich.twitter.repository.jpa.TelegramChatRepository
 import com.programistich.twitter.repository.jpa.TwitterUserRepository
-import com.programistich.twitter.service.twitter.TwitterAccount
-import com.programistich.twitter.service.twitter.TwitterClientService
+import com.programistich.twitter.service.twitter.TwitterService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
 class Repository(
     private val twitterRepository: TwitterUserRepository,
-    private val twitterClientService: TwitterClientService,
+    private val twitterService: TwitterService,
     private val telegramRepository: TelegramChatRepository,
 ) {
 
@@ -36,8 +35,8 @@ class Repository(
             currentChat.twitterUsers.add(newTwitterAccount)
             newTwitterAccount.apply {
                 chats.add(currentChat)
-                lastLikeId = twitterClientService.lastLikeByUsername(username).id
-                lastTweetId = twitterClientService.lastTweetByUsername(username).id
+                lastLikeId = twitterService.lastLikeByUsername(username).id
+                lastTweetId = twitterService.lastTweetByUsername(username).id
             }
             telegramRepository.save(currentChat)
             logger.info("New twitter account $username")

@@ -3,9 +3,8 @@ package com.programistich.twitter.telegram
 import com.programistich.twitter.common.Extensions.id
 import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.repository.Repository
-import com.programistich.twitter.service.stocks.StocksService
 import com.programistich.twitter.service.telegram.TelegramExecutorService
-import com.programistich.twitter.service.twitter.TwitterClientService
+import com.programistich.twitter.service.twitter.TwitterService
 import com.programistich.twitter.template.Template
 import com.programistich.twitter.template.TemplateReader
 import org.slf4j.LoggerFactory
@@ -16,7 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Update
 @Service
 @Transactional
 class TelegramBotService(
-    private val twitterClientService: TwitterClientService,
+    private val twitterService: TwitterService,
     private val bot: TelegramExecutorService,
     private val stocksService: StocksService,
     private val repository: Repository,
@@ -73,7 +72,7 @@ class TelegramBotService(
     fun addTwitterAccountCommand(update: Update, username: String) {
         val chatId = update.id()
         logger.info("Add command by $chatId")
-        val existUsername = twitterClientService.existUsernameInTwitter(username)
+        val existUsername = twitterService.existUsernameInTwitter(username)
         if (existUsername) {
             logger.info("Username $username exist in twitter")
             repository.addTwitterAccount(
@@ -114,7 +113,7 @@ class TelegramBotService(
         logger.info("Last like by $twitterUser in $chatId")
         twitterUser?.let { user ->
             user.lastLikeId?.let {
-                val typeMessage = twitterClientService.parseTweet(it)
+                val typeMessage = twitterService.parseTweet(it)
                 val typeTweet = TypeCommand.Like(username, it, true)
                 bot.sendTweet(chatId, typeMessage, typeTweet)
             }
@@ -140,7 +139,7 @@ class TelegramBotService(
         val chatId = update.id()
         logger.info("Get tweet command by $chatId")
         val user = update.message.from.firstName
-        val existUsername = twitterClientService.existTweetId(tweetId)
+        val existUsername = twitterService.existTweetId(tweetId)
         if (existUsername) {
             logger.info("Get tweet by id $tweetId")
             bot.sendTweetEntryPoint(

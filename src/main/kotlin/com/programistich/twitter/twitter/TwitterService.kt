@@ -23,7 +23,7 @@ data class TwitterAccount(
 }
 
 @Service
-class TwitterClientService(
+class TwitterService(
     private val twitter: Twitter,
 ) {
 
@@ -65,9 +65,14 @@ class TwitterClientService(
     }
 
     fun lastTweetByUsername(username: String): Tweet {
-        val status = twitter.getUserTimeline(username).first()
-        val tweet = twitter.getTweets(status.id)
-        return tweet.tweets[0]
+        try {
+            val status = twitter.getUserTimeline(username)[0]
+            val tweet = twitter.getTweets(status.id)
+            return tweet.tweets[0]
+        }
+        catch (exception: TwitterException){
+            throw TwitterException("Status null")
+        }
     }
 
 

@@ -1,4 +1,4 @@
-package com.programistich.twitter.service.translate
+package com.programistich.twitter.translate
 
 import okhttp3.FormBody
 import okhttp3.OkHttpClient

@@ -1,4 +1,4 @@
-package com.programistich.twitter.service.stocks
+package com.programistich.twitter.stocks
 
 import com.programistich.twitter.service.telegram.TelegramExecutorService
 import org.springframework.stereotype.Service
@@ -9,15 +9,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Service
-class DefaultStocksService(
-    private val telegramExecutorService: TelegramExecutorService
-) : StocksService {
+class StocksService(
+    private val telegramExecutorService: TelegramExecutorService,
+) {
 
-    override fun getStock(name: String): Stock {
+    fun getStock(name: String): Stock {
         return YahooFinance.get(name)
     }
 
-    override fun aboutStock(stock: Stock): String {
+    fun aboutStock(stock: Stock): String {
         val quote = stock.quote
         val date = SimpleDateFormat("dd-MM-yyyy").format(Date())
         val symbol = stock.stats.symbol
@@ -41,13 +41,8 @@ class DefaultStocksService(
         """.trimIndent()
     }
 
-    override fun sendStock(chatId: String, messageId: Int?, stock: Stock) {
+    fun sendStock(chatId: String, messageId: Int?, stock: Stock) {
         val text = aboutStock(stock)
         telegramExecutorService.sendTextMessage(chatId, text, messageId)
-    }
-
-    override fun sendStock(chatId: String, messageId: Int?, name: String) {
-        val stock = YahooFinance.get(name)
-        sendStock(chatId, messageId, stock)
     }
 }

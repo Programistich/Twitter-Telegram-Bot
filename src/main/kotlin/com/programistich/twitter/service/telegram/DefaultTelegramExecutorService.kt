@@ -3,8 +3,8 @@ package com.programistich.twitter.service.telegram
 import com.programistich.twitter.common.TypeCommand
 import com.programistich.twitter.common.TypeMessageTelegram
 import com.programistich.twitter.telegram.TelegramBotInstance
-import com.programistich.twitter.service.translate.TranslateService
-import com.programistich.twitter.service.twitter.TwitterClientService
+import com.programistich.twitter.translate.TranslateService
+import com.programistich.twitter.service.twitter.TwitterService
 import com.programistich.twitter.unshortener.UnShortenerService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -19,7 +19,7 @@ import twitter4j.Tweet
 @Service
 class DefaultTelegramExecutorService(
     private val telegramBotInstance: TelegramBotInstance,
-    private val twitterClientService: TwitterClientService,
+    private val twitterService: TwitterService,
     private val translateService: TranslateService,
     private val shortenerService: UnShortenerService
 ) : TelegramExecutorService {
@@ -38,20 +38,20 @@ class DefaultTelegramExecutorService(
         val newMessageId = sendTweet(tweetId, chatId, null)
         sendTweet(
             chatId = chatId,
-            typeMessage = twitterClientService.parseTweet(tweetId),
+            typeMessage = twitterService.parseTweet(tweetId),
             typeCommand = if(author == null) TypeCommand.Tweet(tweetId, isNew) else TypeCommand.Get(tweetId, author),
             replyToMessageId = newMessageId
         )
     }
 
     private fun sendTweet(tweetId: Long, chatId: String, messageId: Int?): Int? {
-        val tweet = twitterClientService.getTweetById(tweetId)
+        val tweet = twitterService.getTweetById(tweetId)
         val id = tweet.newId()
         if (id != null) {
             val newMessageId = sendTweet(id, chatId, messageId)
             return sendTweet(
                 chatId = chatId,
-                typeMessage = twitterClientService.parseTweet(id),
+                typeMessage = twitterService.parseTweet(id),
                 typeCommand = TypeCommand.Tweet(id),
                 replyToMessageId = newMessageId
             )
@@ -101,7 +101,7 @@ class DefaultTelegramExecutorService(
             else it
         }.joinToString(" ")
         val translateText = translateService.translateText(parseLink.trim())
-        val formatUsername = twitterClientService.usernameToLink(translateText)
+        val formatUsername = twitterService.usernameToLink(translateText)
         return additionalText + "\n\n" + formatUsername
     }
 
@@ -206,7 +206,7 @@ class DefaultTelegramExecutorService(
     }
 
     private fun headerText(typeCommand: TypeCommand): String {
-        val tweet = twitterClientService.parseTweetForTelegram(typeCommand.tweetId)
+        val tweet = twitterService.parseTweetForTelegram(typeCommand.tweetId)
         return when (typeCommand) {
             is TypeCommand.Get -> {
                 val htmlLinkAuthor = tweet.author.html()
@@ -217,8 +217,8 @@ class DefaultTelegramExecutorService(
             is TypeCommand.Like -> {
                 val htmlLinkAuthor = tweet.author.html()
                 val htmlLinkTweet = tweet.html("твит")
-                val linkWhoLiked = twitterClientService.urlUser(typeCommand.whoLiked)
-                val nameWhoLiked = twitterClientService.nameUser(typeCommand.whoLiked)
+                val linkWhoLiked = twitterService.urlUser(typeCommand.whoLiked)
+                val nameWhoLiked = twitterService.nameUser(typeCommand.whoLiked)
                 val htmlLinkWhoLiked = "<a href=\"$linkWhoLiked\">$nameWhoLiked</a>"
 
                 if (typeCommand.last) "Последний лайк $htmlLinkWhoLiked на $htmlLinkTweet от $htmlLinkAuthor"

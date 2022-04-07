@@ -5,7 +5,7 @@ import com.programistich.twitter.entity.TwitterUser
 import com.programistich.twitter.service.db.DefaultDatabaseTelegramChatService
 import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService
 import com.programistich.twitter.service.telegram.DefaultTelegramExecutorService
-import com.programistich.twitter.service.twitter.TwitterClientService
+import com.programistich.twitter.service.twitter.TwitterService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 class TwitterCronJob(
     private val defaultDatabaseTwitterUserService: DefaultDatabaseTwitterUserService,
     private val databaseTelegramChatService: DefaultDatabaseTelegramChatService,
-    private val twitterClientService: TwitterClientService,
+    private val twitterService: TwitterService,
     private val telegramExecutorService: DefaultTelegramExecutorService,
 )  {
 
@@ -49,7 +49,7 @@ class TwitterCronJob(
 
     private fun updateTweetForUsername(username: String, tweetInDB: TwitterUser?) {
         logger.info("Update twitter account $username")
-        val tweetInTwitter: Tweet = twitterClientService.lastTweetByUsername(username)
+        val tweetInTwitter: Tweet = twitterService.lastTweetByUsername(username)
         if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastTweetId) {
             logger.info("New tweet from $username id = $tweetInTwitter.id")
             val twitterUser = TwitterUser(
@@ -70,7 +70,7 @@ class TwitterCronJob(
 
 
     private fun updateLikeForUsername(username: String, tweetInDB: TwitterUser?) {
-        val tweetInTwitter: Tweet = twitterClientService.lastLikeByUsername(username)
+        val tweetInTwitter: Tweet = twitterService.lastLikeByUsername(username)
         if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastLikeId) {
             logger.info("New tweet from $username id = $tweetInTwitter.id")
             val twitterUser = TwitterUser(
@@ -81,7 +81,7 @@ class TwitterCronJob(
             )
             defaultDatabaseTwitterUserService.updateTwitterUser(twitterUser)
             logger.info("Update username = $username")
-            val parsedTweet = twitterClientService.parseTweet(tweetInTwitter.id)
+            val parsedTweet = twitterService.parseTweet(tweetInTwitter.id)
             val chats = databaseTelegramChatService.getChatsByUsername(username)
             chats.map {
                 logger.info("Send tweet to $it")

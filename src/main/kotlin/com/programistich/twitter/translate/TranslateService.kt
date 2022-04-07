@@ -1,4 +1,4 @@
-package com.programistich.twitter.service.translate
+package com.programistich.twitter.translate
 
 interface TranslateService {
 

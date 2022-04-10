@@ -1,7 +1,7 @@
 package com.programistich.twitter.telegram
 
-import com.programistich.twitter.common.Extensions.id
-import com.programistich.twitter.common.TypeCommand
+import com.programistich.twitter.utils.Extensions.id
+import com.programistich.twitter.utils.TypeCommand
 import com.programistich.twitter.repository.Repository
 import com.programistich.twitter.service.telegram.TelegramExecutorService
 import com.programistich.twitter.service.twitter.TwitterService
@@ -76,28 +76,18 @@ class TelegramBotService(
         val existUsername = twitterService.existUsernameInTwitter(username)
         if (existUsername) {
             logger.info("Username $username exist in twitter")
-            repository.addTwitterAccount(
-                chatId = chatId,
-                username = username,
-                onExist = {
-                    val text = template.getTemplate(template = Template.ACCOUNT_EXIST, values = arrayOf(username))
-                    logger.info("Username $username exist in chat $chatId")
-                    bot.sendTextMessage(
-                        chatId = chatId,
-                        text = text
-                    )
-                },
-                onNotExist = {
-                    val text = template.getTemplate(template = Template.ACCOUNT_GOOD, values = arrayOf(username))
-                    logger.info("Username $username not exist in chat $chatId")
-                    bot.sendTextMessage(
-                        chatId = chatId,
-                        text = text
-                    )
-                    lastLikeByUsernameCommand(update, username)
-                    lastTweetByUsernameCommand(update, username)
-                }
-            )
+            val existAccountInChat = repository.addTwitterAccount(chatId = chatId, username = username)
+            if (existAccountInChat) {
+                val text = template.getTemplate(template = Template.ACCOUNT_EXIST, values = arrayOf(username))
+                logger.info("Username $username exist in chat $chatId")
+                bot.sendTextMessage(chatId = chatId, text = text)
+            } else {
+                val text = template.getTemplate(template = Template.ACCOUNT_GOOD, values = arrayOf(username))
+                logger.info("Username $username not exist in chat $chatId")
+                bot.sendTextMessage(chatId = chatId, text = text)
+                lastLikeByUsernameCommand(update, username)
+                lastTweetByUsernameCommand(update, username)
+            }
         } else {
             val text = template.getTemplate(template = Template.ACCOUNT_NOT_FOUND, values = arrayOf(username))
             logger.info("Username $username not exist in twitter")

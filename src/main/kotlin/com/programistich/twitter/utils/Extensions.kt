@@ -1,8 +1,7 @@
-package com.programistich.twitter.common
+package com.programistich.twitter.utils
 
 import com.programistich.twitter.telegram.TelegramBotCommand
 import org.telegram.telegrambots.meta.api.objects.EntityType
-import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.MessageEntity
 import org.telegram.telegrambots.meta.api.objects.Update
 

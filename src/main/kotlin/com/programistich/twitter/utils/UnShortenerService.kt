@@ -1,4 +1,4 @@
-package com.programistich.twitter.unshortener
+package com.programistich.twitter.utils
 
 import org.springframework.stereotype.Service
 import java.io.BufferedReader

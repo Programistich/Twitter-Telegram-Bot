@@ -1,6 +1,6 @@
 package com.programistich.twitter.cronjob
 
-import com.programistich.twitter.common.TypeCommand
+import com.programistich.twitter.utils.TypeCommand
 import com.programistich.twitter.entity.TwitterUser
 import com.programistich.twitter.service.db.DefaultDatabaseTelegramChatService
 import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService

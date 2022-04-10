@@ -1,13 +1,13 @@
 package com.programistich.twitter.service.telegram
 
-import com.programistich.twitter.common.TypeCommand
-import com.programistich.twitter.common.TypeMessageTelegram
+import com.programistich.twitter.utils.TypeCommand
+import com.programistich.twitter.telegram.TelegramMessageType
 
 interface TelegramExecutorService {
 
     fun sendTweet(
         chatId: String,
-        typeMessage: TypeMessageTelegram?,
+        typeMessage: TelegramMessageType?,
         typeCommand: TypeCommand,
         replyToMessageId: Int? = null,
     ): Int
@@ -15,7 +15,13 @@ interface TelegramExecutorService {
     fun sendTextMessage(chatId: String, text: String, replyToMessageId: Int? = null): Int
     fun sendPhotoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int
     fun sendAnimatedMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int
-    fun sendVideoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int
+    fun sendVideoMessageByUrl(
+        chatId: String,
+        textMessage: String,
+        url: List<String>,
+        replyToMessageId: Int?,
+        tweetId: Long
+    ): Int
     fun sendManyMediaMessageByUrls(chatId: String, textMessage: String, urls: List<String>, replyToMessageId: Int?): Int
     fun deleteMessage(chatId: String, messageId: Int)
     fun sendStickerMessage(chatId: String, stickerId: String)

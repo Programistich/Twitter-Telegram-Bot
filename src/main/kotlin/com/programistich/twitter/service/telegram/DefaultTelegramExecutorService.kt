@@ -1,11 +1,13 @@
 package com.programistich.twitter.service.telegram
 
-import com.programistich.twitter.common.TypeCommand
-import com.programistich.twitter.common.TypeMessageTelegram
+import com.programistich.twitter.utils.TypeCommand
+import com.programistich.twitter.telegram.TelegramMessageType
 import com.programistich.twitter.telegram.TelegramBotInstance
 import com.programistich.twitter.translate.TranslateService
 import com.programistich.twitter.service.twitter.TwitterService
-import com.programistich.twitter.unshortener.UnShortenerService
+import com.programistich.twitter.template.Template
+import com.programistich.twitter.template.TemplateReader
+import com.programistich.twitter.utils.UnShortenerService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.methods.send.*
@@ -21,7 +23,8 @@ class DefaultTelegramExecutorService(
     private val telegramBotInstance: TelegramBotInstance,
     private val twitterService: TwitterService,
     private val translateService: TranslateService,
-    private val shortenerService: UnShortenerService
+    private val shortenerService: UnShortenerService,
+    private val template: TemplateReader,
 ) : TelegramExecutorService {
 
     private val logger = LoggerFactory.getLogger(DefaultTelegramExecutorService::class.java)
@@ -39,7 +42,7 @@ class DefaultTelegramExecutorService(
         sendTweet(
             chatId = chatId,
             typeMessage = twitterService.parseTweet(tweetId),
-            typeCommand = if(author == null) TypeCommand.Tweet(tweetId, isNew) else TypeCommand.Get(tweetId, author),
+            typeCommand = if (author == null) TypeCommand.Tweet(tweetId, isNew) else TypeCommand.Get(tweetId, author),
             replyToMessageId = newMessageId
         )
     }
@@ -61,29 +64,29 @@ class DefaultTelegramExecutorService(
 
     override fun sendTweet(
         chatId: String,
-        typeMessage: TypeMessageTelegram?,
+        typeMessage: TelegramMessageType?,
         typeCommand: TypeCommand,
         replyToMessageId: Int?,
     ): Int {
         val headerText = headerText(typeCommand)
         return when (typeMessage) {
-            is TypeMessageTelegram.TextMessage -> {
+            is TelegramMessageType.TextMessage -> {
                 val textMessage = formatText(headerText, typeMessage.text)
                 sendTextMessage(chatId, textMessage, replyToMessageId)
             }
-            is TypeMessageTelegram.PhotoMessage -> {
+            is TelegramMessageType.PhotoMessage -> {
                 val textMessage = formatText(headerText, typeMessage.text)
                 sendPhotoMessageByUrl(chatId, textMessage, typeMessage.url, replyToMessageId)
             }
-            is TypeMessageTelegram.AnimatedMessage -> {
+            is TelegramMessageType.AnimatedMessage -> {
                 val textMessage = formatText(headerText, typeMessage.text)
                 sendAnimatedMessageByUrl(chatId, textMessage, typeMessage.url, replyToMessageId)
             }
-            is TypeMessageTelegram.VideoMessage -> {
+            is TelegramMessageType.VideoMessage -> {
                 val textMessage = formatText(headerText, typeMessage.text)
-                sendVideoMessageByUrl(chatId, textMessage, typeMessage.url, replyToMessageId)
+                sendVideoMessageByUrl(chatId, textMessage, typeMessage.url, replyToMessageId, typeCommand.tweetId)
             }
-            is TypeMessageTelegram.ManyMediaMessage -> {
+            is TelegramMessageType.ManyMediaMessage -> {
                 val textMessage = formatText(headerText(typeCommand), typeMessage.text)
                 sendManyMediaMessageByUrls(chatId, textMessage, typeMessage.urlsMedia, replyToMessageId)
             }
@@ -94,11 +97,10 @@ class DefaultTelegramExecutorService(
     }
 
     private fun formatText(additionalText: String, textTweet: String): String {
-        val parseLink = textTweet.split("\\s".toRegex()).map{
+        val parseLink = textTweet.split("\\s".toRegex()).map {
             if (it.startsWith("https://t.co/")) {
                 shortenerService.shortLink(it)
-            }
-            else it
+            } else it
         }.joinToString(" ")
         val translateText = translateService.translateText(parseLink.trim())
         val formatUsername = twitterService.usernameToLink(translateText)
@@ -141,20 +143,43 @@ class DefaultTelegramExecutorService(
         return telegramBotInstance.execute(message).messageId
     }
 
-    override fun sendVideoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int {
+    override fun sendVideoMessageByUrl(
+        chatId: String,
+        textMessage: String,
+        url: List<String>,
+        replyToMessageId: Int?,
+        tweetId: Long,
+    ): Int {
+        for (i in 0..url.size - 2) {
+            val message = SendVideo()
+            message.chatId = chatId
+            message.caption = textMessage
+            message.video = InputFile(url[i])
+            message.parseMode = "html"
+            if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
+            try {
+                return telegramBotInstance.execute(message).messageId
+            } catch (_: TelegramApiException) {
+            }
+        }
         val message = SendVideo()
         message.chatId = chatId
         message.caption = textMessage
-        message.video = InputFile(url)
+        message.video = InputFile(url.last())
         message.parseMode = "html"
         if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
         return try {
             telegramBotInstance.execute(message).messageId
-        } catch (exception: TelegramApiException){
+        } catch (exception: TelegramApiException) {
             logger.info("Exception with $url exc $exception")
+            val link = twitterService.parseTweetForTelegram(tweetId).url
+            val text = template.getTemplate(
+                template = Template.ERROR,
+                values = arrayOf(link)
+            )
             sendTextMessage(
                 chatId = chatId,
-                text = "Что-то пошло не так",
+                text = text,
                 replyToMessageId = replyToMessageId
             )
         }
@@ -226,11 +251,10 @@ class DefaultTelegramExecutorService(
             }
             is TypeCommand.Tweet -> {
                 val htmlLinkAuthor = tweet.author.html()
-                if(typeCommand.last){
+                if (typeCommand.last) {
                     val htmlLinkTweet = tweet.html("Последний твит")
                     "$htmlLinkTweet от $htmlLinkAuthor"
-                }
-                else {
+                } else {
                     val htmlLinkTweet = tweet.html("Твит")
                     "$htmlLinkTweet от $htmlLinkAuthor"
                 }

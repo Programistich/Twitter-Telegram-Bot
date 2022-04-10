@@ -14,7 +14,7 @@ class Repository(
     private val twitterService: TwitterService,
     private val telegramRepository: TelegramChatRepository,
 ) {
-
+    private val current: MutableMap<Long, MutableMap<Long, Int>> = mutableMapOf()
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun addTelegramChat(chatId: String) {
@@ -26,10 +26,10 @@ class Repository(
         }
     }
 
-    fun addTwitterAccount(chatId: String, username: String, onExist: () -> Unit, onNotExist: () -> Unit) {
+    fun addTwitterAccount(chatId: String, username: String): Boolean {
         val currentChat = telegramRepository.findById(chatId).orElseThrow()
         val twitterAccounts = currentChat.twitterUsers.filter { it.username == username }
-        if (twitterAccounts.isNotEmpty()) onExist.invoke()
+        return if (twitterAccounts.isNotEmpty()) false
         else {
             val newTwitterAccount = TwitterUser(username)
             currentChat.twitterUsers.add(newTwitterAccount)
@@ -40,7 +40,7 @@ class Repository(
             }
             telegramRepository.save(currentChat)
             logger.info("New twitter account $username")
-            onNotExist.invoke()
+            true
         }
     }
 

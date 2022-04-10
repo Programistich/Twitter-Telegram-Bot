@@ -1,6 +1,6 @@
 package com.programistich.twitter.service.twitter
 
-import com.programistich.twitter.common.TypeMessageTelegram
+import com.programistich.twitter.telegram.TelegramMessageType
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -10,7 +10,7 @@ import twitter4j.*
 data class BaseTweet(
     val id: Long,
     val url: String,
-    val content: TypeMessageTelegram? = null,
+    val content: TelegramMessageType? = null,
     val author: TwitterAccount,
 ) {
     fun html(text: String) = "<a href=\"$url\">$text</a>"
@@ -68,7 +68,7 @@ class TwitterService(
     }
 
     fun lastTweetByUsername(username: String): Tweet {
-        while(true){
+        while (true) {
             val status = twitter.getUserTimeline(username)
             if (status.isNotEmpty()) {
                 val tweet = twitter.getTweets(status[0].id)
@@ -81,7 +81,7 @@ class TwitterService(
     }
 
 
-    fun parseTweet(tweetId: Long): TypeMessageTelegram? {
+    fun parseTweet(tweetId: Long): TelegramMessageType? {
         val tweet = twitter.showStatus(tweetId)
         val urlEntity = tweet.quotedStatusPermalink
         var text = tweet.text
@@ -89,8 +89,8 @@ class TwitterService(
             text = text.replace(urlEntity.url, "")
         }
         val medias = tweet.mediaEntities
-        var typeMessageTelegram: TypeMessageTelegram? = null
-        if (medias.isEmpty()) typeMessageTelegram = TypeMessageTelegram.TextMessage(text)
+        var telegramMessageType: TelegramMessageType? = null
+        if (medias.isEmpty()) telegramMessageType = TelegramMessageType.TextMessage(text)
         else {
             medias.toList().forEach {
                 val link = it.url
@@ -98,20 +98,20 @@ class TwitterService(
             }
             if (medias.size == 1) {
                 when (medias[0].type) {
-                    "photo" -> typeMessageTelegram = TypeMessageTelegram.PhotoMessage(medias[0].mediaURL, text)
+                    "photo" -> telegramMessageType = TelegramMessageType.PhotoMessage(medias[0].mediaURL, text)
                     "video" -> {
                         val urlVideo = medias[0].videoVariants.toList().sortedBy {
                             it.bitrate
-                        }.reversed()[0].url
-                        typeMessageTelegram = TypeMessageTelegram.VideoMessage(urlVideo, text)
+                        }.reversed().map { it.url }
+                        telegramMessageType = TelegramMessageType.VideoMessage(urlVideo, text)
                     }
                     "animated_gif" -> {
                         if (medias[0].videoVariants.isNotEmpty()) {
                             val urlVideo = medias[0].videoVariants.toList().sortedBy {
                                 it.bitrate
-                            }.reversed()[0].url
-                            typeMessageTelegram = TypeMessageTelegram.VideoMessage(urlVideo, text)
-                        } else typeMessageTelegram = TypeMessageTelegram.AnimatedMessage(medias[0].mediaURL, text)
+                            }.reversed().map { it.url }
+                            telegramMessageType = TelegramMessageType.VideoMessage(urlVideo, text)
+                        } else telegramMessageType = TelegramMessageType.AnimatedMessage(medias[0].mediaURL, text)
                     }
                 }
             } else {
@@ -127,10 +127,10 @@ class TwitterService(
 //                        }
                     }
                 }
-                typeMessageTelegram = TypeMessageTelegram.ManyMediaMessage(url, text)
+                telegramMessageType = TelegramMessageType.ManyMediaMessage(url, text)
             }
         }
-        return typeMessageTelegram
+        return telegramMessageType
     }
 
 

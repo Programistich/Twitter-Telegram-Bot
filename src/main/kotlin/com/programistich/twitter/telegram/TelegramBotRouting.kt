@@ -1,6 +1,6 @@
 package com.programistich.twitter.telegram
 
-import com.programistich.twitter.common.Extensions.getCommand
+import com.programistich.twitter.utils.Extensions.getCommand
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
 

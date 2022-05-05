@@ -1,13 +1,13 @@
 package com.programistich.twitter.telegram
 
-import com.programistich.twitter.utils.Extensions.id
-import com.programistich.twitter.utils.TypeCommand
 import com.programistich.twitter.repository.Repository
 import com.programistich.twitter.service.telegram.TelegramExecutorService
 import com.programistich.twitter.service.twitter.TwitterService
 import com.programistich.twitter.stocks.StocksService
 import com.programistich.twitter.template.Template
 import com.programistich.twitter.template.TemplateReader
+import com.programistich.twitter.utils.Extensions.id
+import com.programistich.twitter.utils.TypeCommand
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,7 +28,8 @@ class TelegramBotService(
     fun startCommand(update: Update) {
         val chatId = update.id()
         val text = template.getTemplate(template = Template.START)
-        repository.addTelegramChat(chatId)
+        val isChannel = update.channelPost != null
+        repository.addTelegramChat(chatId, isChannel)
         logger.info("Start command by $chatId")
         bot.sendTextMessage(
             chatId = chatId,
@@ -80,21 +81,33 @@ class TelegramBotService(
             if (!existAccountInChat) {
                 val text = template.getTemplate(template = Template.ACCOUNT_EXIST, values = arrayOf(username))
                 logger.info("Username $username exist in chat $chatId")
-                bot.sendTextMessage(chatId = chatId, text = text)
+                if (!update.hasChannelPost()) {
+                    bot.sendTextMessage(chatId = chatId, text = text)
+                } else {
+                    bot.deleteMessage(chatId, update.channelPost.messageId)
+                }
             } else {
                 val text = template.getTemplate(template = Template.ACCOUNT_GOOD, values = arrayOf(username))
                 logger.info("Username $username not exist in chat $chatId")
-                bot.sendTextMessage(chatId = chatId, text = text)
-                lastLikeByUsernameCommand(update, username)
-                lastTweetByUsernameCommand(update, username)
+                if (!update.hasChannelPost()) {
+                    bot.sendTextMessage(chatId = chatId, text = text)
+                    lastLikeByUsernameCommand(update, username)
+                    lastTweetByUsernameCommand(update, username)
+                } else {
+                    bot.deleteMessage(chatId, update.channelPost.messageId)
+                }
             }
         } else {
             val text = template.getTemplate(template = Template.ACCOUNT_NOT_FOUND, values = arrayOf(username))
             logger.info("Username $username not exist in twitter")
-            bot.sendTextMessage(
-                chatId = chatId,
-                text = text
-            )
+            if (!update.hasChannelPost()) {
+                bot.sendTextMessage(
+                    chatId = chatId,
+                    text = text
+                )
+            } else {
+                bot.deleteMessage(chatId, update.channelPost.messageId)
+            }
         }
     }
 
@@ -152,12 +165,10 @@ class TelegramBotService(
         }
     }
 
-
     fun stocksCommand(update: Update) {
         val chatId = update.id()
         val messageId = update.message.messageId
         val stock = stocksService.getStock("TSLA")
         stocksService.sendStock(chatId, messageId, stock)
     }
-
 }

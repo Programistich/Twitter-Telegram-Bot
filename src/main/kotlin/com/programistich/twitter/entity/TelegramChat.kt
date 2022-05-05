@@ -8,6 +8,8 @@ class TelegramChat(
     @Id
     @Column(name = "chat_id")
     val chatId: String = "",
+    @Column(name = "is_channel")
+    val isChannel: Boolean,
     @ManyToMany(
         fetch = FetchType.LAZY,
         cascade = [

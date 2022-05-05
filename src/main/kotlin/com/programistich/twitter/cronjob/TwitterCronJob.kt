@@ -62,8 +62,11 @@ class TwitterCronJob(
             logger.info("Update username = $username")
             val chats = databaseTelegramChatService.getChatsByUsername(username)
             chats.map {
-                logger.info("Send tweet to $it")
-                telegramExecutorService.sendTweetEntryPoint(tweetInTwitter.id, it)
+                if (it.isChannel && tweetInTwitter.retweetId != null) return
+                else {
+                    logger.info("Send tweet to $it")
+                    telegramExecutorService.sendTweetEntryPoint(tweetInTwitter.id, it.chatId)
+                }
             }
         }
     }
@@ -82,10 +85,10 @@ class TwitterCronJob(
             logger.info("Update username = $username")
             val parsedTweet = twitterService.parseTweet(tweetInTwitter.id)
             val chats = databaseTelegramChatService.getChatsByUsername(username)
-            chats.map {
+            chats.filter { !it.isChannel }.map {
                 logger.info("Send tweet to $it")
                 val typeTweet = TypeCommand.Like(username, tweetInTwitter.id)
-                telegramExecutorService.sendTweet(it, parsedTweet, typeTweet)
+                telegramExecutorService.sendTweet(it.chatId, parsedTweet, typeTweet)
             }
         }
     }

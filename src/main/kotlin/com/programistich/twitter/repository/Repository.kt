@@ -17,10 +17,10 @@ class Repository(
     private val current: MutableMap<Long, MutableMap<Long, Int>> = mutableMapOf()
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    fun addTelegramChat(chatId: String) {
+    fun addTelegramChat(chatId: String, isChannel: Boolean) {
         val existChat = telegramRepository.findById(chatId).isPresent
         if (!existChat) {
-            val telegramChat = TelegramChat(chatId)
+            val telegramChat = TelegramChat(chatId, isChannel)
             telegramRepository.save(telegramChat)
             logger.info("New telegram chat $chatId")
         }

@@ -22,10 +22,6 @@ class DefaultDatabaseTelegramChatService(
         telegramChatRepository.save(chat)
     }
 
-    override fun createChat(chatId: String) {
-        telegramChatRepository.save(TelegramChat(chatId))
-    }
-
     override fun updateChat(chat: TelegramChat) {
         telegramChatRepository.save(chat)
     }
@@ -35,14 +31,13 @@ class DefaultDatabaseTelegramChatService(
         return user.twitterUsers.map { it.username }.any { it == username }
     }
 
-    override fun getChatsByUsername(username: String): List<String> {
+    override fun getChatsByUsername(username: String): List<TelegramChat> {
         return telegramChatRepository.findAll().filter { telegramChat ->
             telegramChat.twitterUsers.map { it.username }.any { it == username }
-        }.map { it.chatId }
+        }
     }
 
     override fun getAllChats(): List<TelegramChat> {
         return telegramChatRepository.findAll()
     }
-
 }

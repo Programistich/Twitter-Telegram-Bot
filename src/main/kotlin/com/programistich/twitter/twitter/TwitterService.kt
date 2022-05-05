@@ -1,5 +1,6 @@
 package com.programistich.twitter.service.twitter
 
+import com.programistich.twitter.cache.TweetCache
 import com.programistich.twitter.telegram.TelegramMessageType
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -28,11 +29,11 @@ data class TwitterAccount(
 @Service
 class TwitterService(
     private val twitter: Twitter,
+    private val cache: TweetCache
 ) {
 
-
     fun parseTweetForTelegram(tweetId: Long): BaseTweet {
-        val tweet = twitter.getTweets(tweetId).tweets[0]
+        val tweet = cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
         val author = parseTwitterAccount(tweet.authorId!!)
         val url = getLinkOnTweet(tweetId, author.username)
         return BaseTweet(
@@ -55,7 +56,6 @@ class TwitterService(
         )
     }
 
-
     fun existUsernameInTwitter(username: String): Boolean {
         return kotlin.runCatching {
             twitter.showUser(username)
@@ -71,15 +71,14 @@ class TwitterService(
         while (true) {
             val status = twitter.getUserTimeline(username)
             if (status.isNotEmpty()) {
-                val tweet = twitter.getTweets(status[0].id)
-                return tweet.tweets[0]
+                val tweetId = status[0].id
+                return cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
             }
             GlobalScope.launch {
                 delay(1000)
             }
         }
     }
-
 
     fun parseTweet(tweetId: Long): TelegramMessageType? {
         val tweet = twitter.showStatus(tweetId)
@@ -133,7 +132,6 @@ class TwitterService(
         return telegramMessageType
     }
 
-
     fun usernameToLink(text: String): String {
         val result = arrayListOf<String>()
         text.split(" ").toList().map {
@@ -149,31 +147,25 @@ class TwitterService(
         return resultString
     }
 
-
     fun getUser(username: String): User {
         return twitter.showUser(username)
     }
-
 
     fun nameUser(username: String): String {
         return getUser(username).name
     }
 
-
     fun urlUser(username: String): String {
         return "https://twitter.com/$username"
     }
 
-
     fun getTweetById(tweetId: Long): Tweet {
-        return twitter.getTweets(tweetId).tweets[0]
+        return cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
     }
-
 
     fun getAuthorForTweet(tweet: Tweet): String {
         return twitter.showUser(tweet.authorId!!).screenName
     }
-
 
     fun getLinkOnTweet(tweetId: Long, username: String): String {
         return "https://twitter.com/$username/status/$tweetId"
@@ -184,5 +176,4 @@ class TwitterService(
             getTweetById(tweetId)
         }.isSuccess
     }
-
 }

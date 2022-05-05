@@ -1,16 +1,17 @@
 package com.programistich.twitter.service.telegram
 
-import com.programistich.twitter.utils.TypeCommand
-import com.programistich.twitter.telegram.TelegramMessageType
-import com.programistich.twitter.telegram.TelegramBotInstance
-import com.programistich.twitter.translate.TranslateService
+import com.programistich.twitter.cache.TelegramCache
 import com.programistich.twitter.service.twitter.TwitterService
+import com.programistich.twitter.telegram.TelegramBotInstance
+import com.programistich.twitter.telegram.TelegramMessageType
 import com.programistich.twitter.template.Template
 import com.programistich.twitter.template.TemplateReader
+import com.programistich.twitter.translate.TranslateService
+import com.programistich.twitter.utils.TypeCommand
 import com.programistich.twitter.utils.UnShortenerService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.methods.send.*
+import org.telegram.telegrambots.meta.api.methods.send.* // ktlint-disable no-wildcard-imports
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia
@@ -25,6 +26,7 @@ class DefaultTelegramExecutorService(
     private val translateService: TranslateService,
     private val shortenerService: UnShortenerService,
     private val template: TemplateReader,
+    private val cache: TelegramCache
 ) : TelegramExecutorService {
 
     private val logger = LoggerFactory.getLogger(DefaultTelegramExecutorService::class.java)
@@ -33,7 +35,8 @@ class DefaultTelegramExecutorService(
         val ids = listOf(
             quotedTweetId,
             retweetId,
-            repliedToTweetId)
+            repliedToTweetId
+        )
         return ids.filterNotNull().firstOrNull()
     }
 
@@ -68,8 +71,12 @@ class DefaultTelegramExecutorService(
         typeCommand: TypeCommand,
         replyToMessageId: Int?,
     ): Int {
+        if (typeCommand !is TypeCommand.Like) {
+            val existId = cache.get(typeCommand.tweetId, chatId)
+            if (existId != null) return existId
+        }
         val headerText = headerText(typeCommand)
-        return when (typeMessage) {
+        val id = when (typeMessage) {
             is TelegramMessageType.TextMessage -> {
                 val textMessage = formatText(headerText, typeMessage.text)
                 sendTextMessage(chatId, textMessage, replyToMessageId)
@@ -94,6 +101,10 @@ class DefaultTelegramExecutorService(
                 telegramBotInstance.execute(SendMessage(chatId, "Что-то пошло не так")).messageId
             }
         }
+        if (typeCommand !is TypeCommand.Like) {
+            return cache.add(typeCommand.tweetId, chatId, id)
+        }
+        return id
     }
 
     private fun formatText(additionalText: String, textTweet: String): String {
@@ -227,7 +238,6 @@ class DefaultTelegramExecutorService(
         } catch (e: TelegramApiException) {
             logger.info("Cant delete msg")
         }
-
     }
 
     private fun headerText(typeCommand: TypeCommand): String {
@@ -260,6 +270,5 @@ class DefaultTelegramExecutorService(
                 }
             }
         }
-
     }
 }

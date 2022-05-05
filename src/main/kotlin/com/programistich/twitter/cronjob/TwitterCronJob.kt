@@ -1,11 +1,11 @@
 package com.programistich.twitter.cronjob
 
-import com.programistich.twitter.utils.TypeCommand
 import com.programistich.twitter.entity.TwitterUser
 import com.programistich.twitter.service.db.DefaultDatabaseTelegramChatService
 import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService
 import com.programistich.twitter.service.telegram.DefaultTelegramExecutorService
 import com.programistich.twitter.service.twitter.TwitterService
+import com.programistich.twitter.utils.TypeCommand
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -20,7 +20,7 @@ class TwitterCronJob(
     private val databaseTelegramChatService: DefaultDatabaseTelegramChatService,
     private val twitterService: TwitterService,
     private val telegramExecutorService: DefaultTelegramExecutorService,
-)  {
+) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -50,7 +50,7 @@ class TwitterCronJob(
     private fun updateTweetForUsername(username: String, tweetInDB: TwitterUser?) {
         logger.info("Update twitter account $username")
         val tweetInTwitter: Tweet = twitterService.lastTweetByUsername(username)
-        if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastTweetId) {
+        if (tweetInDB == null || tweetInTwitter.id > (tweetInDB.lastTweetId ?: 0)) {
             logger.info("New tweet from $username id = $tweetInTwitter.id")
             val twitterUser = TwitterUser(
                 username = username,
@@ -67,7 +67,6 @@ class TwitterCronJob(
             }
         }
     }
-
 
     private fun updateLikeForUsername(username: String, tweetInDB: TwitterUser?) {
         val tweetInTwitter: Tweet = twitterService.lastLikeByUsername(username)

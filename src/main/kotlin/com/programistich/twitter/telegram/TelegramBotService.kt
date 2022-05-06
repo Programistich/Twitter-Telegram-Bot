@@ -146,11 +146,12 @@ class TelegramBotService(
         val existUsername = twitterService.existTweetId(tweetId)
         if (existUsername) {
             logger.info("Get tweet by id $tweetId")
+            val replyMessage: Int? = update.message?.replyToMessage?.messageId
             bot.sendTweetEntryPoint(
                 tweetId = tweetId,
                 chatId = chatId,
                 author = user,
-                replyMessage = update.message?.replyToMessage?.messageId
+                replyMessage = null
             )
             bot.deleteMessage(
                 chatId = chatId,

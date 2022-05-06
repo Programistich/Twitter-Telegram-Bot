@@ -40,8 +40,8 @@ class DefaultTelegramExecutorService(
         return ids.filterNotNull().firstOrNull()
     }
 
-    override fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String?, isNew: Boolean) {
-        val newMessageId = sendTweet(tweetId, chatId, null)
+    override fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String?, isNew: Boolean, replyMessage: Int?) {
+        val newMessageId = sendTweet(tweetId, chatId, replyMessage)
         sendTweet(
             chatId = chatId,
             typeMessage = twitterService.parseTweet(tweetId),

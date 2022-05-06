@@ -25,5 +25,5 @@ interface TelegramExecutorService {
     fun sendManyMediaMessageByUrls(chatId: String, textMessage: String, urls: List<String>, replyToMessageId: Int?): Int
     fun deleteMessage(chatId: String, messageId: Int)
     fun sendStickerMessage(chatId: String, stickerId: String)
-    fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String? = null, isNew: Boolean = false)
+    fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String? = null, isNew: Boolean = false, replyMessage: Int? = null)
 }

@@ -149,7 +149,8 @@ class TelegramBotService(
             bot.sendTweetEntryPoint(
                 tweetId = tweetId,
                 chatId = chatId,
-                author = user
+                author = user,
+                replyMessage = update.message.replyToMessage.messageId
             )
             bot.deleteMessage(
                 chatId = chatId,

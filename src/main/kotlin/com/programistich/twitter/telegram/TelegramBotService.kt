@@ -150,7 +150,7 @@ class TelegramBotService(
                 tweetId = tweetId,
                 chatId = chatId,
                 author = user,
-                replyMessage = update.message.replyToMessage.messageId
+                replyMessage = update.message?.replyToMessage?.messageId
             )
             bot.deleteMessage(
                 chatId = chatId,

@@ -78,7 +78,7 @@ class TelegramBotService(
         if (existUsername) {
             logger.info("Username $username exist in twitter")
             val existAccountInChat = repository.addTwitterAccount(chatId = chatId, username = username)
-            if (!existAccountInChat) {
+            if (existAccountInChat) {
                 val text = template.getTemplate(template = Template.ACCOUNT_EXIST, values = arrayOf(username))
                 logger.info("Username $username exist in chat $chatId")
                 if (!update.hasChannelPost()) {

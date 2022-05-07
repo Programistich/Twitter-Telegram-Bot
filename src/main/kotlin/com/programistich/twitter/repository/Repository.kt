@@ -29,18 +29,17 @@ class Repository(
     fun addTwitterAccount(chatId: String, username: String): Boolean {
         val currentChat = telegramRepository.findById(chatId).orElseThrow()
         val twitterAccounts = currentChat.twitterUsers.filter { it.username == username }
-        return if (twitterAccounts.isNotEmpty()) false
+        return if (twitterAccounts.isNotEmpty()) true
         else {
-            val newTwitterAccount = TwitterUser(username)
-            currentChat.twitterUsers.add(newTwitterAccount)
+            val newTwitterAccount = twitterRepository.findById(username).orElse(TwitterUser(username))
             newTwitterAccount.apply {
                 chats.add(currentChat)
                 lastLikeId = twitterService.lastLikeByUsername(username).id
                 lastTweetId = twitterService.lastTweetByUsername(username).id
             }
-            telegramRepository.save(currentChat)
+            twitterRepository.save(newTwitterAccount)
             logger.info("New twitter account $username")
-            true
+            false
         }
     }
 

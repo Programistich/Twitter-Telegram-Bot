@@ -160,7 +160,7 @@ class TwitterService(
     }
 
     fun getTweetById(tweetId: Long): Tweet {
-        return cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
+        return cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets.first { it.id == tweetId }
     }
 
     fun getAuthorForTweet(tweet: Tweet): String {

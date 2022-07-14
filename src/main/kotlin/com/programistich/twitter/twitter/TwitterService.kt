@@ -26,11 +26,45 @@ data class TwitterAccount(
     fun html() = "<a href=\"$url\">$name</a>"
 }
 
+data class InternalTweet(
+    val nextTweet: InternalTweet? = null,
+    val current: BaseTweet
+)
+
+fun Tweet.newId(): Long? {
+    val ids = listOf(
+        quotedTweetId,
+        retweetId,
+        repliedToTweetId
+    )
+    return ids.filterNotNull().firstOrNull()
+}
+
 @Service
 class TwitterService(
     private val twitter: Twitter,
     private val cache: TweetCache
 ) {
+
+    fun parseInternalTweet(tweetId: Long): InternalTweet {
+        val tweet = cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
+        cache.add(tweet)
+        val nextId = tweet.newId()
+        return InternalTweet(
+            nextTweet = nextId?.let { parseInternalTweet(it) },
+            current = parseTweetForTelegram(tweet)
+        )
+    }
+
+    fun parseTweetForTelegram(tweet: Tweet): BaseTweet {
+        val url = getLinkOnTweet(tweet.id, getUserName(tweet.authorId!!))
+        return BaseTweet(
+            id = tweet.id,
+            url = url,
+            content = parseTweet(tweet.id),
+            author = parseTwitterAccount(tweet.authorId!!)
+        )
+    }
 
     fun parseTweetForTelegram(tweetId: Long): BaseTweet {
         val tweet = cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
@@ -39,6 +73,7 @@ class TwitterService(
         return BaseTweet(
             id = tweetId,
             url = url,
+            content = parseTweet(tweetId),
             author = author
         )
     }
@@ -149,6 +184,10 @@ class TwitterService(
 
     fun getUser(username: String): User {
         return twitter.showUser(username)
+    }
+
+    fun getUserName(id: Long): String {
+        return twitter.showUser(id).name
     }
 
     fun nameUser(username: String): String {

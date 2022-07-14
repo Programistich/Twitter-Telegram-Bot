@@ -1,6 +1,7 @@
 package com.programistich.twitter.service.telegram
 
 import com.programistich.twitter.cache.TelegramCache
+import com.programistich.twitter.service.twitter.InternalTweet
 import com.programistich.twitter.service.twitter.TwitterService
 import com.programistich.twitter.telegram.TelegramBotInstance
 import com.programistich.twitter.telegram.TelegramMessageType
@@ -48,6 +49,29 @@ class DefaultTelegramExecutorService(
             typeCommand = if (author == null) TypeCommand.Tweet(tweetId, isNew) else TypeCommand.Get(tweetId, author),
             replyToMessageId = newMessageId
         )
+    }
+
+    override fun sendTweetEntryPoint(tweetInternal: InternalTweet, chatId: String, author: String?, isNew: Boolean, replyMessage: Int?) {
+        val newMessageId = sendTweet(tweetInternal, chatId, replyMessage)
+        sendTweet(
+            chatId = chatId,
+            typeMessage = tweetInternal.current.content,
+            typeCommand = if (author == null) TypeCommand.Tweet(tweetInternal.current.id, isNew) else TypeCommand.Get(tweetInternal.current.id, author),
+            replyToMessageId = newMessageId
+        )
+    }
+
+    private fun sendTweet(tweetInternal: InternalTweet, chatId: String, messageId: Int?): Int? {
+        if (tweetInternal.nextTweet != null) {
+            val newMessageId = sendTweet(tweetInternal.nextTweet, chatId, messageId)
+            return sendTweet(
+                chatId = chatId,
+                typeMessage = tweetInternal.current.content,
+                typeCommand = TypeCommand.Tweet(tweetInternal.current.id),
+                replyToMessageId = newMessageId
+            )
+        }
+        return messageId
     }
 
     private fun sendTweet(tweetId: Long, chatId: String, messageId: Int?): Int? {

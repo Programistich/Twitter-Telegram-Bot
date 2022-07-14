@@ -40,9 +40,7 @@ class TwitterCronJob(
             }
             val tweetInDB = defaultDatabaseTwitterUserService.getTwitterUserByUsername(it)
             updateLikeForUsername(it, tweetInDB)
-            TimeUnit.SECONDS.sleep(1)
             updateTweetForUsername(it, tweetInDB)
-            TimeUnit.SECONDS.sleep(2)
         }
         logger.info("End update twitter accounts")
     }
@@ -61,11 +59,12 @@ class TwitterCronJob(
             defaultDatabaseTwitterUserService.updateTwitterUser(twitterUser)
             logger.info("Update username = $username")
             val chats = databaseTelegramChatService.getChatsByUsername(username)
+            val internalTweet = twitterService.parseInternalTweet(tweetInTwitter.id)
             chats.map {
                 if (it.isChannel && tweetInTwitter.retweetId != null) return
                 else {
                     logger.info("Send tweet to $it")
-                    telegramExecutorService.sendTweetEntryPoint(tweetInTwitter.id, it.chatId)
+                    telegramExecutorService.sendTweetEntryPoint(internalTweet, it.chatId)
                 }
             }
         }

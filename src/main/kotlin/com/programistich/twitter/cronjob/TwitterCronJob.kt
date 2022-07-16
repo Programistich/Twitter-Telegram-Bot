@@ -31,12 +31,10 @@ class TwitterCronJob(
 
     @Scheduled(fixedDelay = 2 * 60 * 1000)
     fun updateTwitter() {
-        coroutineScope.launch {
-            updateTwitterForAllUsernames()
-        }
+        updateTwitterForAllUsernames()
     }
 
-    private suspend fun updateTwitterForAllUsernames() {
+    private fun updateTwitterForAllUsernames() {
         logger.info("Start update twitter accounts")
         val usernames = defaultDatabaseTwitterUserService.getAllUsername()
         usernames.forEach {
@@ -47,9 +45,9 @@ class TwitterCronJob(
             }
             val tweetInDB = defaultDatabaseTwitterUserService.getTwitterUserByUsername(it)
             updateLikeForUsername(it, tweetInDB)
-            delay(200)
+            TimeUnit.MILLISECONDS.sleep(100)
             updateTweetForUsername(it, tweetInDB)
-            delay(500)
+            TimeUnit.MILLISECONDS.sleep(200)
         }
         logger.info("End update twitter accounts")
     }

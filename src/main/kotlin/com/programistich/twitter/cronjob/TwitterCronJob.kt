@@ -49,7 +49,7 @@ class TwitterCronJob(
         logger.info("Update twitter account $username")
         val tweetInTwitter: Tweet = twitterService.lastTweetByUsername(username)
         if (tweetInDB != null && tweetInTwitter.id > (tweetInDB.lastTweetId ?: 0)) {
-            logger.info("New tweet from $username id = $tweetInTwitter.id")
+            logger.info("New tweet from $username id = ${tweetInTwitter.id}")
             val twitterUser = TwitterUser(
                 username = username,
                 lastLikeId = tweetInDB.lastLikeId,
@@ -73,7 +73,7 @@ class TwitterCronJob(
     private fun updateLikeForUsername(username: String, tweetInDB: TwitterUser?) {
         val tweetInTwitter: Tweet = twitterService.lastLikeByUsername(username)
         if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastLikeId) {
-            logger.info("New tweet from $username id = $tweetInTwitter.id")
+            logger.info("New like from $username id = $tweetInTwitter.id")
             val twitterUser = TwitterUser(
                 username = username,
                 lastLikeId = tweetInTwitter.id,
@@ -85,7 +85,7 @@ class TwitterCronJob(
             val parsedTweet = twitterService.parseTweet(tweetInTwitter.id)
             val chats = databaseTelegramChatService.getChatsByUsername(username)
             chats.filter { !it.isChannel }.map {
-                logger.info("Send tweet to $it")
+                logger.info("Send like tweet to $it")
                 val typeTweet = TypeCommand.Like(username, tweetInTwitter.id)
                 telegramExecutorService.sendTweet(it.chatId, parsedTweet, typeTweet)
             }

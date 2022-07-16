@@ -48,11 +48,11 @@ class TwitterCronJob(
     private fun updateTweetForUsername(username: String, tweetInDB: TwitterUser?) {
         logger.info("Update twitter account $username")
         val tweetInTwitter: Tweet = twitterService.lastTweetByUsername(username)
-        if (tweetInDB == null || tweetInTwitter.id > (tweetInDB.lastTweetId ?: 0)) {
+        if (tweetInDB != null && tweetInTwitter.id > (tweetInDB.lastTweetId ?: 0)) {
             logger.info("New tweet from $username id = $tweetInTwitter.id")
             val twitterUser = TwitterUser(
                 username = username,
-                lastLikeId = tweetInDB!!.lastLikeId,
+                lastLikeId = tweetInDB.lastLikeId,
                 lastTweetId = tweetInTwitter.id,
                 chats = tweetInDB.chats
             )
@@ -63,7 +63,7 @@ class TwitterCronJob(
             chats.map {
                 if (it.isChannel && tweetInTwitter.retweetId != null) return
                 else {
-                    logger.info("Send tweet to $it")
+                    logger.info("Send tweet to ${it.chatId}")
                     telegramExecutorService.sendTweetEntryPoint(internalTweet, it.chatId)
                 }
             }

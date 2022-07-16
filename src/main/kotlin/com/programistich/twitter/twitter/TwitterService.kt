@@ -103,16 +103,9 @@ class TwitterService(
     }
 
     fun lastTweetByUsername(username: String): Tweet {
-        while (true) {
-            val status = twitter.getUserTimeline(username)
-            if (status.isNotEmpty()) {
-                val tweetId = status[0].id
-                return cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
-            }
-            GlobalScope.launch {
-                delay(1000)
-            }
-        }
+        val status = twitter.getUserTimeline(username)
+        val tweetId = status[0].id
+        return cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
     }
 
     fun parseTweet(tweetId: Long): TelegramMessageType? {

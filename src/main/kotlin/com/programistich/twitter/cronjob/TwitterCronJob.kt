@@ -6,6 +6,10 @@ import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService
 import com.programistich.twitter.service.telegram.DefaultTelegramExecutorService
 import com.programistich.twitter.service.twitter.TwitterService
 import com.programistich.twitter.utils.TypeCommand
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -23,13 +27,16 @@ class TwitterCronJob(
 ) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     @Scheduled(fixedDelay = 2 * 60 * 1000)
     fun updateTwitter() {
-        updateTwitterForAllUsernames()
+        coroutineScope.launch {
+            updateTwitterForAllUsernames()
+        }
     }
 
-    private fun updateTwitterForAllUsernames() {
+    private suspend fun updateTwitterForAllUsernames() {
         logger.info("Start update twitter accounts")
         val usernames = defaultDatabaseTwitterUserService.getAllUsername()
         usernames.forEach {
@@ -40,7 +47,9 @@ class TwitterCronJob(
             }
             val tweetInDB = defaultDatabaseTwitterUserService.getTwitterUserByUsername(it)
             updateLikeForUsername(it, tweetInDB)
+            delay(200)
             updateTweetForUsername(it, tweetInDB)
+            delay(500)
         }
         logger.info("End update twitter accounts")
     }

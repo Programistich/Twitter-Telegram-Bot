@@ -56,7 +56,8 @@ class DefaultTelegramExecutorService(
         sendTweet(
             chatId = chatId,
             typeMessage = tweetInternal.current.content,
-            typeCommand = if (author == null) TypeCommand.Tweet(tweetInternal.current.id, isNew) else TypeCommand.Get(tweetInternal.current.id, author),
+            typeCommand = if (author == null) TypeCommand.Tweet(tweetInternal.current.id, isNew)
+            else TypeCommand.Get(tweetInternal.current.id, author),
             replyToMessageId = newMessageId
         )
     }

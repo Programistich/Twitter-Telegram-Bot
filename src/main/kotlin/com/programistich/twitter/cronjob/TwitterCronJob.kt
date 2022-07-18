@@ -45,9 +45,9 @@ class TwitterCronJob(
             }
             val tweetInDB = defaultDatabaseTwitterUserService.getTwitterUserByUsername(it)
             updateLikeForUsername(it, tweetInDB)
-            TimeUnit.SECONDS.sleep(5)
+            TimeUnit.SECONDS.sleep(10)
             updateTweetForUsername(it, tweetInDB)
-            TimeUnit.SECONDS.sleep(5)
+            TimeUnit.SECONDS.sleep(10)
         }
         logger.info("End update twitter accounts")
     }

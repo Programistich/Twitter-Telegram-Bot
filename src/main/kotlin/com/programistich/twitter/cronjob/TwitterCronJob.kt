@@ -80,12 +80,12 @@ class TwitterCronJob(
     private fun updateLikeForUsername(username: String, tweetInDB: TwitterUser?) {
         logger.info("Update like twitter account $username")
         val tweetInTwitter: Tweet = twitterService.lastLikeByUsername(username)
-        if (tweetInDB == null || tweetInTwitter.id != tweetInDB.lastLikeId) {
+        if (tweetInDB != null && tweetInTwitter.id != tweetInDB.lastLikeId) {
             logger.info("New like from $username id = $tweetInTwitter.id")
             val twitterUser = TwitterUser(
                 username = username,
                 lastLikeId = tweetInTwitter.id,
-                lastTweetId = tweetInDB!!.lastTweetId,
+                lastTweetId = tweetInDB.lastTweetId,
                 chats = tweetInDB.chats
             )
             defaultDatabaseTwitterUserService.updateTwitterUser(twitterUser)

@@ -11,7 +11,7 @@ class TelegramChat(
     @Column(name = "is_channel")
     val isChannel: Boolean,
     @ManyToMany(
-        fetch = FetchType.LAZY,
+        fetch = FetchType.EAGER,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE

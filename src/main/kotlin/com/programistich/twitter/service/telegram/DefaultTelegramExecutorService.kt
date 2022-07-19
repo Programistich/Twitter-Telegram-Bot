@@ -53,20 +53,24 @@ class DefaultTelegramExecutorService(
     }
 
     override fun sendTweetEntryPoint(tweetInternal: InternalTweet, chatId: String, author: String?, isNew: Boolean, replyMessage: Int?) {
-        sendTweet(tweetInternal, chatId, replyMessage)
+        sendTweet(tweetInternal, chatId, replyMessage, author)
     }
 
-    private fun sendTweet(tweetInternal: InternalTweet, chatId: String, messageId: Int?): Int? {
+    private fun sendTweet(tweetInternal: InternalTweet, chatId: String, messageId: Int?, author: String?): Int? {
         var newMessageId: Int? = messageId
         if (tweetInternal.nextTweet != null) {
             write(chatId)
-            newMessageId = sendTweet(tweetInternal.nextTweet, chatId, messageId)
+            newMessageId = sendTweet(tweetInternal.nextTweet, chatId, messageId, null)
         }
         write(chatId)
         return sendTweet(
             chatId = chatId,
             typeMessage = tweetInternal.current.content,
-            typeCommand = TypeCommand.Tweet(tweetInternal.current.id),
+            typeCommand = if(author == null) TypeCommand.Tweet(tweetInternal.current.id)
+            else TypeCommand.Get(
+                tweetId = tweetInternal.current.id,
+                author = author
+            ),
             replyToMessageId = newMessageId
         )
     }
@@ -92,7 +96,6 @@ class DefaultTelegramExecutorService(
         typeCommand: TypeCommand,
         replyToMessageId: Int?,
     ): Int {
-        println(typeMessage)
         if (typeCommand !is TypeCommand.Like) {
             val existId = cache.get(typeCommand.tweetId, chatId)
             if (existId != null) return existId
@@ -268,7 +271,6 @@ class DefaultTelegramExecutorService(
             message.chatId = chatId
             message.setAction(ActionType.TYPING)
             telegramBotInstance.execute(message)
-            logger.info("Action message in $chatId")
         } catch (e: TelegramApiException) {
             logger.info("Cant action msg")
         }

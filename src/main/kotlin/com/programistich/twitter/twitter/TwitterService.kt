@@ -99,7 +99,7 @@ class TwitterService(
 
     fun lastLikeByUsername(username: String): Tweet {
         val user = twitter.showUser(username)
-        return twitter.getLikedTweets(userId = user.id, maxResults = 5).tweets[0]
+        return twitter.getLikedTweets(userId = user.id, maxResults = 5).tweets.first()
     }
 
     fun lastTweetByUsername(username: String): Tweet {

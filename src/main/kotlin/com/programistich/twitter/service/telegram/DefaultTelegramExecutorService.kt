@@ -19,6 +19,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException
 import twitter4j.Tweet
 
 @Service
@@ -66,7 +67,7 @@ class DefaultTelegramExecutorService(
         return sendTweet(
             chatId = chatId,
             typeMessage = tweetInternal.current.content,
-            typeCommand = if(author == null) TypeCommand.Tweet(tweetInternal.current.id)
+            typeCommand = if (author == null) TypeCommand.Tweet(tweetInternal.current.id)
             else TypeCommand.Get(
                 tweetId = tweetInternal.current.id,
                 author = author
@@ -144,24 +145,34 @@ class DefaultTelegramExecutorService(
     }
 
     override fun sendTextMessage(chatId: String, text: String, replyToMessageId: Int?): Int {
-        val message = SendMessage()
-        message.text = text
-        message.chatId = chatId
-        message.parseMode = "html"
-        message.disableWebPagePreview = true
-        if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        message.disableWebPagePreview = true
-        return telegramBotInstance.execute(message).messageId
+        return try {
+            val message = SendMessage()
+            message.text = text
+            message.chatId = chatId
+            message.parseMode = "html"
+            message.disableWebPagePreview = true
+            if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
+            message.disableWebPagePreview = true
+            return telegramBotInstance.execute(message).messageId
+        } catch (e: TelegramApiRequestException) {
+            logger.info("Exception with exc $e")
+            0
+        }
     }
 
     override fun sendPhotoMessageByUrl(chatId: String, textMessage: String, url: String, replyToMessageId: Int?): Int {
-        val message = SendPhoto()
-        message.chatId = chatId
-        message.caption = textMessage
-        message.photo = InputFile(url)
-        message.parseMode = "html"
-        if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        return telegramBotInstance.execute(message).messageId
+        return try {
+            val message = SendPhoto()
+            message.chatId = chatId
+            message.caption = textMessage
+            message.photo = InputFile(url)
+            message.parseMode = "html"
+            if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
+            return telegramBotInstance.execute(message).messageId
+        } catch (e: TelegramApiRequestException) {
+            logger.info("Exception with exc $e")
+            0
+        }
     }
 
     override fun sendAnimatedMessageByUrl(
@@ -170,13 +181,18 @@ class DefaultTelegramExecutorService(
         url: String,
         replyToMessageId: Int?,
     ): Int {
-        val message = SendAnimation()
-        message.chatId = chatId
-        message.caption = textMessage
-        message.animation = InputFile(url)
-        message.parseMode = "html"
-        if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        return telegramBotInstance.execute(message).messageId
+        return try {
+            val message = SendAnimation()
+            message.chatId = chatId
+            message.caption = textMessage
+            message.animation = InputFile(url)
+            message.parseMode = "html"
+            if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
+            telegramBotInstance.execute(message).messageId
+        } catch (e: TelegramApiRequestException) {
+            logger.info("Exception with exc $e")
+            0
+        }
     }
 
     override fun sendVideoMessageByUrl(
@@ -227,30 +243,39 @@ class DefaultTelegramExecutorService(
         urls: List<String>,
         replyToMessageId: Int?,
     ): Int {
-        val message = SendMediaGroup()
-        message.chatId = chatId
-        val listMedia = arrayListOf<InputMedia>()
-        var media = InputMediaPhoto()
-        media.media = urls[0]
-        if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
-        media.caption = textMessage
-        media.parseMode = "html"
-        listMedia.add(media)
-        for (i in 1 until urls.size) {
-            media = InputMediaPhoto()
-            media.media = urls[i]
+        return try {
+            val message = SendMediaGroup()
+            message.chatId = chatId
+            val listMedia = arrayListOf<InputMedia>()
+            var media = InputMediaPhoto()
+            media.media = urls[0]
+            if (replyToMessageId != null) message.replyToMessageId = replyToMessageId
+            media.caption = textMessage
+            media.parseMode = "html"
             listMedia.add(media)
+            for (i in 1 until urls.size) {
+                media = InputMediaPhoto()
+                media.media = urls[i]
+                listMedia.add(media)
+            }
+            message.medias = listMedia
+            return telegramBotInstance.execute(message).map { it.messageId }.first()
+        } catch (e: TelegramApiRequestException) {
+            logger.info("Exception with exc $e")
+            0
         }
-        message.medias = listMedia
-        return telegramBotInstance.execute(message).map { it.messageId }.first()
     }
 
     override fun sendStickerMessage(chatId: String, stickerId: String) {
-        val message = SendSticker()
-        message.chatId = chatId
-        message.sticker = InputFile(stickerId)
-        telegramBotInstance.execute(message)
-        logger.info("Send sticker message to $chatId")
+        try {
+            val message = SendSticker()
+            message.chatId = chatId
+            message.sticker = InputFile(stickerId)
+            telegramBotInstance.execute(message)
+            logger.info("Send sticker message to $chatId")
+        } catch (e: TelegramApiRequestException) {
+            logger.info("Exception with $stickerId exc $e")
+        }
     }
 
     override fun deleteMessage(chatId: String, messageId: Int) {

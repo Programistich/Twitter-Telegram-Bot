@@ -152,12 +152,17 @@ class TelegramBotService(
                 messageId = update.message.messageId
             )
             bot.write(chatId)
-            bot.sendTweetEntryPoint(
-                tweetInternal = tweet,
-                chatId = chatId,
-                author = user,
-                replyMessage = update.message?.replyToMessage?.messageId
-            )
+            if (tweet != null) {
+                bot.sendTweetEntryPoint(
+                    tweetInternal = tweet,
+                    chatId = chatId,
+                    author = user,
+                    replyMessage = update.message?.replyToMessage?.messageId
+                )
+            } else {
+                val text = template.getTemplate(template = Template.TWEET_NOT_FOUND, values = arrayOf(tweetId.toString()))
+                bot.sendTextMessage(chatId = chatId, text = text)
+            }
         } else {
             val text = template.getTemplate(template = Template.TWEET_NOT_FOUND)
             logger.info("Tweet by id $tweetId not found")

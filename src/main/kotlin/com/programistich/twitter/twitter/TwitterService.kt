@@ -46,14 +46,19 @@ class TwitterService(
     private val cache: TweetCache
 ) {
 
-    fun parseInternalTweet(tweetId: Long): InternalTweet {
-        val tweet = cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
-        cache.add(tweet)
-        val nextId = tweet.newId()
-        return InternalTweet(
-            nextTweet = nextId?.let { parseInternalTweet(it) },
-            current = parseTweetForTelegram(tweet)
-        )
+    fun parseInternalTweet(tweetId: Long): InternalTweet? {
+        return try {
+            val tweet = cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
+            cache.add(tweet)
+            val nextId = tweet.newId()
+            InternalTweet(
+                nextTweet = nextId?.let { parseInternalTweet(it) },
+                current = parseTweetForTelegram(tweet)
+            )
+        } catch (exc: TwitterException) {
+            println(exc.message)
+            null
+        }
     }
 
     fun parseTweetForTelegram(tweet: Tweet): BaseTweet {

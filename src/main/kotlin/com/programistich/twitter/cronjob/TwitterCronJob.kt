@@ -56,7 +56,7 @@ class TwitterCronJob(
             user.lastTweetId = tweetInTwitter.id
             defaultDatabaseTwitterUserService.updateTwitterUser(user)
             logger.info("Update username = $username")
-            val internalTweet = twitterService.parseInternalTweet(tweetInTwitter.id)
+            val internalTweet = twitterService.parseInternalTweet(tweetInTwitter.id) ?: return
             user.chats.map {
                 if (it.isChannel && tweetInTwitter.retweetId != null) return
                 else {

@@ -12,7 +12,8 @@ import com.programistich.twitter.utils.TypeCommand
 import com.programistich.twitter.utils.UnShortenerService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.telegram.telegrambots.meta.api.methods.send.* // ktlint-disable no-wildcard-imports
+import org.telegram.telegrambots.meta.api.methods.ActionType
+import org.telegram.telegrambots.meta.api.methods.send.*
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.objects.InputFile
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia
@@ -52,27 +53,22 @@ class DefaultTelegramExecutorService(
     }
 
     override fun sendTweetEntryPoint(tweetInternal: InternalTweet, chatId: String, author: String?, isNew: Boolean, replyMessage: Int?) {
-        val newMessageId = sendTweet(tweetInternal, chatId, replyMessage)
-        sendTweet(
-            chatId = chatId,
-            typeMessage = tweetInternal.current.content,
-            typeCommand = if (author == null) TypeCommand.Tweet(tweetInternal.current.id, isNew)
-            else TypeCommand.Get(tweetInternal.current.id, author),
-            replyToMessageId = newMessageId
-        )
+        sendTweet(tweetInternal, chatId, replyMessage)
     }
 
     private fun sendTweet(tweetInternal: InternalTweet, chatId: String, messageId: Int?): Int? {
+        var newMessageId: Int? = messageId
         if (tweetInternal.nextTweet != null) {
-            val newMessageId = sendTweet(tweetInternal.nextTweet, chatId, messageId)
-            return sendTweet(
-                chatId = chatId,
-                typeMessage = tweetInternal.current.content,
-                typeCommand = TypeCommand.Tweet(tweetInternal.current.id),
-                replyToMessageId = newMessageId
-            )
+            write(chatId)
+            newMessageId = sendTweet(tweetInternal.nextTweet, chatId, messageId)
         }
-        return messageId
+        write(chatId)
+        return sendTweet(
+            chatId = chatId,
+            typeMessage = tweetInternal.current.content,
+            typeCommand = TypeCommand.Tweet(tweetInternal.current.id),
+            replyToMessageId = newMessageId
+        )
     }
 
     private fun sendTweet(tweetId: Long, chatId: String, messageId: Int?): Int? {
@@ -96,6 +92,7 @@ class DefaultTelegramExecutorService(
         typeCommand: TypeCommand,
         replyToMessageId: Int?,
     ): Int {
+        println(typeMessage)
         if (typeCommand !is TypeCommand.Like) {
             val existId = cache.get(typeCommand.tweetId, chatId)
             if (existId != null) return existId
@@ -262,6 +259,18 @@ class DefaultTelegramExecutorService(
             logger.info("Delete message in $chatId")
         } catch (e: TelegramApiException) {
             logger.info("Cant delete msg")
+        }
+    }
+
+    override fun write(chatId: String) {
+        try {
+            val message = SendChatAction()
+            message.chatId = chatId
+            message.setAction(ActionType.TYPING)
+            telegramBotInstance.execute(message)
+            logger.info("Action message in $chatId")
+        } catch (e: TelegramApiException) {
+            logger.info("Cant action msg")
         }
     }
 

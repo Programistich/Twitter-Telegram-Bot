@@ -145,16 +145,18 @@ class TelegramBotService(
         val user = update.message.from.firstName
         val existUsername = twitterService.existTweetId(tweetId)
         if (existUsername) {
+            val tweet = twitterService.parseInternalTweet(tweetId)
             logger.info("Get tweet by id $tweetId")
-            bot.sendTweetEntryPoint(
-                tweetId = tweetId,
-                chatId = chatId,
-                author = user,
-                replyMessage = update.message?.replyToMessage?.messageId
-            )
             bot.deleteMessage(
                 chatId = chatId,
                 messageId = update.message.messageId
+            )
+            bot.write(chatId)
+            bot.sendTweetEntryPoint(
+                tweetInternal = tweet,
+                chatId = chatId,
+                author = user,
+                replyMessage = update.message?.replyToMessage?.messageId
             )
         } else {
             val text = template.getTemplate(template = Template.TWEET_NOT_FOUND)

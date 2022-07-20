@@ -95,7 +95,7 @@ class DefaultTelegramExecutorService(
         chatId: String,
         typeMessage: TelegramMessageType?,
         typeCommand: TypeCommand,
-        replyToMessageId: Int?,
+        replyToMessageId: Int?
     ): Int {
         if (typeCommand !is TypeCommand.Like) {
             val existId = cache.get(typeCommand.tweetId, chatId)
@@ -133,12 +133,20 @@ class DefaultTelegramExecutorService(
         return id
     }
 
-    private fun formatText(additionalText: String, textTweet: String): String {
-        val parseLink = textTweet.split("\\s".toRegex()).map {
+    private fun getAllLinks(text: String): Map<String, String> {
+        val links = mutableMapOf<String, String>()
+        text.split("\\s".toRegex()).forEach {
             if (it.startsWith("https://t.co/")) {
-                shortenerService.shortLink(it)
-            } else it
-        }.joinToString(" ")
+                links[it] = shortenerService.shortLink(it)
+            }
+        }
+        return links
+    } private fun formatText(additionalText: String, textTweet: String): String {
+        var parseLink = textTweet
+        val links = getAllLinks(textTweet)
+        links.forEach { (linkTwitter, link) ->
+            parseLink = parseLink.replace(linkTwitter, link)
+        }
         val translateText = translateService.translateText(parseLink.trim())
         val formatUsername = twitterService.usernameToLink(translateText)
         return additionalText + "\n\n" + formatUsername
@@ -179,7 +187,7 @@ class DefaultTelegramExecutorService(
         chatId: String,
         textMessage: String,
         url: String,
-        replyToMessageId: Int?,
+        replyToMessageId: Int?
     ): Int {
         return try {
             val message = SendAnimation()
@@ -200,7 +208,7 @@ class DefaultTelegramExecutorService(
         textMessage: String,
         url: List<String>,
         replyToMessageId: Int?,
-        tweetId: Long,
+        tweetId: Long
     ): Int {
         for (i in 0..url.size - 2) {
             val message = SendVideo()
@@ -241,7 +249,7 @@ class DefaultTelegramExecutorService(
         chatId: String,
         textMessage: String,
         urls: List<String>,
-        replyToMessageId: Int?,
+        replyToMessageId: Int?
     ): Int {
         return try {
             val message = SendMediaGroup()

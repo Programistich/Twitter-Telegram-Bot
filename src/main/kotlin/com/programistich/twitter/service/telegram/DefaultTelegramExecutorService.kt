@@ -64,16 +64,31 @@ class DefaultTelegramExecutorService(
             newMessageId = sendTweet(tweetInternal.nextTweet, chatId, messageId, null)
         }
         write(chatId)
-        return sendTweet(
-            chatId = chatId,
-            typeMessage = tweetInternal.current.content,
-            typeCommand = if (author == null) TypeCommand.Tweet(tweetInternal.current.id)
-            else TypeCommand.Get(
-                tweetId = tweetInternal.current.id,
-                author = author
-            ),
-            replyToMessageId = newMessageId
-        )
+        if (author == null) {
+            return sendTweet(
+                chatId = chatId,
+                typeMessage = tweetInternal.current.content,
+                typeCommand = TypeCommand.Tweet(tweetInternal.current.id),
+                replyToMessageId = newMessageId
+            )
+        }
+        else {
+            val existTweet = cache.get(tweetInternal.current.id, chatId)
+            return if (existTweet == null) sendTweet(
+                chatId = chatId,
+                typeMessage = tweetInternal.current.content,
+                typeCommand = TypeCommand.Get(
+                    tweetId = tweetInternal.current.id,
+                    author = author
+                ),
+                replyToMessageId = newMessageId
+            )
+            else {
+                val link = twitterService.getLinkOnTweet(tweetInternal.current.id, tweetInternal.current.author.username)
+                val text = template.getTemplate(template = Template.TWEET_EXIST, values = arrayOf(link, author))
+                sendTextMessage(chatId = chatId, text = text, replyToMessageId = existTweet)
+            }
+        }
     }
 
     private fun sendTweet(tweetId: Long, chatId: String, messageId: Int?): Int? {

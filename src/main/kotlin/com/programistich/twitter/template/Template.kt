@@ -9,6 +9,7 @@ enum class Template {
     ACCOUNT_EXIST,
     ACCOUNT_NOT_FOUND,
     TWEET_NOT_FOUND,
+    TWEET_EXIST,
     LIKE,
     ERROR
 }

@@ -142,7 +142,7 @@ class TelegramBotService(
     fun getTweetCommand(update: Update, tweetId: Long) {
         val chatId = update.id()
         logger.info("Get tweet command by $chatId")
-        val user = update.message.from.firstName
+        val user = update.message.from
         val existUsername = twitterService.existTweetId(tweetId)
         if (existUsername) {
             val tweet = twitterService.parseInternalTweet(tweetId)

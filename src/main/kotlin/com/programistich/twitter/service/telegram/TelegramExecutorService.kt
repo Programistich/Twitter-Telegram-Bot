@@ -3,6 +3,7 @@ package com.programistich.twitter.service.telegram
 import com.programistich.twitter.service.twitter.InternalTweet
 import com.programistich.twitter.utils.TypeCommand
 import com.programistich.twitter.telegram.TelegramMessageType
+import org.telegram.telegrambots.meta.api.objects.User
 
 interface TelegramExecutorService {
 
@@ -28,5 +29,5 @@ interface TelegramExecutorService {
     fun write(chatId: String)
     fun sendStickerMessage(chatId: String, stickerId: String)
     fun sendTweetEntryPoint(tweetId: Long, chatId: String, author: String? = null, isNew: Boolean = false, replyMessage: Int? = null)
-    fun sendTweetEntryPoint(tweetInternal: InternalTweet, chatId: String, author: String? = null, isNew: Boolean = false, replyMessage: Int? = null)
+    fun sendTweetEntryPoint(tweetInternal: InternalTweet, chatId: String, author: User? = null, isNew: Boolean = false, replyMessage: Int? = null)
 }

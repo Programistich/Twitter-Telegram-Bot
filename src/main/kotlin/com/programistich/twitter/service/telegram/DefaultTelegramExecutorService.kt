@@ -16,6 +16,7 @@ import org.telegram.telegrambots.meta.api.methods.ActionType
 import org.telegram.telegrambots.meta.api.methods.send.*
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.objects.InputFile
+import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.media.InputMedia
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
@@ -53,11 +54,11 @@ class DefaultTelegramExecutorService(
         )
     }
 
-    override fun sendTweetEntryPoint(tweetInternal: InternalTweet, chatId: String, author: String?, isNew: Boolean, replyMessage: Int?) {
+    override fun sendTweetEntryPoint(tweetInternal: InternalTweet, chatId: String, author: User?, isNew: Boolean, replyMessage: Int?) {
         sendTweet(tweetInternal, chatId, replyMessage, author)
     }
 
-    private fun sendTweet(tweetInternal: InternalTweet, chatId: String, messageId: Int?, author: String?): Int? {
+    private fun sendTweet(tweetInternal: InternalTweet, chatId: String, messageId: Int?, author: User?): Int? {
         var newMessageId: Int? = messageId
         if (tweetInternal.nextTweet != null) {
             write(chatId)
@@ -79,13 +80,13 @@ class DefaultTelegramExecutorService(
                 typeMessage = tweetInternal.current.content,
                 typeCommand = TypeCommand.Get(
                     tweetId = tweetInternal.current.id,
-                    author = author
+                    author = author.firstName
                 ),
                 replyToMessageId = newMessageId
             )
             else {
                 val link = twitterService.getLinkOnTweet(tweetInternal.current.id, tweetInternal.current.author.username)
-                val text = template.getTemplate(template = Template.TWEET_EXIST, values = arrayOf(link, author))
+                val text = template.getTemplate(template = Template.TWEET_EXIST, values = arrayOf(link, author.userName))
                 sendTextMessage(chatId = chatId, text = text, replyToMessageId = existTweet)
             }
         }

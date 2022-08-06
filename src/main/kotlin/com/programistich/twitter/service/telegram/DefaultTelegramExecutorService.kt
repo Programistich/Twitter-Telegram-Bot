@@ -86,7 +86,7 @@ class DefaultTelegramExecutorService(
             )
             else {
                 val link = twitterService.getLinkOnTweet(tweetInternal.current.id, tweetInternal.current.author.username)
-                val text = template.getTemplate(template = Template.TWEET_EXIST, values = arrayOf(link, author.userName))
+                val text = template.getTemplate(template = Template.TWEET_EXIST, values = arrayOf(author.userName, link))
                 sendTextMessage(chatId = chatId, text = text, replyToMessageId = existTweet)
             }
         }

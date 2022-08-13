@@ -102,15 +102,15 @@ class TwitterService(
         }.isSuccess
     }
 
-    fun lastLikeByUsername(username: String): Tweet {
+    fun lastLikeByUsername(username: String): List<Tweet> {
         val user = twitter.showUser(username)
-        return twitter.getLikedTweets(userId = user.id, maxResults = 5).tweets.first()
+        return twitter.getLikedTweets(userId = user.id, maxResults = 5, tweetFields = "author_id").tweets
     }
 
-    fun lastTweetByUsername(username: String): Tweet {
+    fun lastTweetByUsername(username: String): List<Tweet> {
         val status = twitter.getUserTimeline(username)
-        val tweetId = status[0].id
-        return cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
+        val tweetId = status.map { it.id }.take(5).toLongArray()
+        return twitter.getTweets(*tweetId).tweets
     }
 
     fun parseTweet(tweetId: Long): TelegramMessageType? {

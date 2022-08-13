@@ -34,8 +34,8 @@ class Repository(
             val newTwitterAccount = twitterRepository.findById(username).orElse(TwitterUser(username))
             newTwitterAccount.apply {
                 chats.add(currentChat)
-                lastLikeId = twitterService.lastLikeByUsername(username).id
-                lastTweetId = twitterService.lastTweetByUsername(username).id
+                lastLikeId = twitterService.lastLikeByUsername(username).first().id
+                lastTweetId = twitterService.lastTweetByUsername(username).first().id
             }
             twitterRepository.save(newTwitterAccount)
             logger.info("New twitter account $username")

@@ -22,7 +22,6 @@ class TwitterCronJob(
 ) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
-    private var first = 1
 
     @Scheduled(fixedDelay = 2 * 60 * 1000)
     fun updateTwitter() {
@@ -45,7 +44,6 @@ class TwitterCronJob(
                 TimeUnit.SECONDS.sleep(10)
             }
         }
-        first = if (first < 5) first + 1 else 5
         logger.info("End update twitter accounts")
     }
 
@@ -55,14 +53,16 @@ class TwitterCronJob(
         val tweetInTwittersDirty = twitterService.lastTweetByUsername(username)
         val tweetInTwitters = mutableListOf<Tweet>()
 
-        val tweetInTwitter = tweetInTwittersDirty.firstOrNull() { it.id == user.lastTweetId }
-        if (tweetInTwitter == null) { tweetInTwitters.addAll(tweetInTwittersDirty) } else {
+        val tweetInTwitter = tweetInTwittersDirty.firstOrNull { it.id == user.lastTweetId }
+        if (user.lastTweetId == 0L || user.lastTweetId == null) {
+            tweetInTwitters.add(tweetInTwittersDirty.first())
+        }
+        else if (tweetInTwitter == null) { tweetInTwitters.addAll(tweetInTwittersDirty) } else {
             val index = tweetInTwittersDirty.indexOf(tweetInTwitter)
             tweetInTwitters.addAll(tweetInTwittersDirty.subList(0, index))
         }
-        val result = tweetInTwitters.take(first)
-        logger.info("Count $first of result $result")
-        result.forEach { tweetInTwitter ->
+        logger.info("Result $tweetInTwitters")
+        tweetInTwitters.forEach { tweetInTwitter ->
             if (tweetInTwitter.id > (user.lastTweetId ?: 0)) {
                 logger.info("New tweet from $username id = ${tweetInTwitter.id}")
                 user.lastTweetId = tweetInTwitter.id
@@ -86,14 +86,16 @@ class TwitterCronJob(
         val tweetInTwittersDirty = twitterService.lastLikeByUsername(username)
         val tweetInTwitters = mutableListOf<Tweet>()
 
-        val tweetInTwitter = tweetInTwittersDirty.firstOrNull() { it.id == user.lastLikeId }
-        if (tweetInTwitter == null) { tweetInTwitters.addAll(tweetInTwittersDirty) } else {
+        val tweetInTwitter = tweetInTwittersDirty.firstOrNull { it.id == user.lastLikeId }
+        if (user.lastLikeId == 0L || user.lastLikeId == null) {
+            tweetInTwitters.add(tweetInTwittersDirty.first())
+        }
+        else if (tweetInTwitter == null) { tweetInTwitters.addAll(tweetInTwittersDirty) } else {
             val index = tweetInTwittersDirty.indexOf(tweetInTwitter)
             tweetInTwitters.addAll(tweetInTwittersDirty.subList(0, index))
         }
-        val result = tweetInTwitters.take(first)
-        logger.info("Count $first of result $result")
-        result.forEach { tweetInTwitter ->
+        logger.info("Result $tweetInTwitters")
+        tweetInTwitters.forEach { tweetInTwitter ->
             if (tweetInTwitter.id != user.lastLikeId) {
                 logger.info("New like from $username id = $tweetInTwitter.id")
                 user.lastLikeId = tweetInTwitter.id

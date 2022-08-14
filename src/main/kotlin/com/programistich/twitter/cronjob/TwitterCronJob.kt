@@ -51,6 +51,7 @@ class TwitterCronJob(
     fun updateTweetForUsername(username: String, user: TwitterUser) {
         logger.info("Update tweet twitter account $username")
         val tweetInTwittersDirty = twitterService.lastTweetByUsername(username)
+        logger.info("TweetInTwittersDirty ${tweetInTwittersDirty.map { it.id }}")
         val tweetInTwitters = mutableListOf<Tweet>()
 
         val tweetInTwitter = tweetInTwittersDirty.firstOrNull { it.id == user.lastTweetId }
@@ -61,7 +62,7 @@ class TwitterCronJob(
             val index = tweetInTwittersDirty.indexOf(tweetInTwitter)
             tweetInTwitters.addAll(tweetInTwittersDirty.subList(0, index))
         }
-        logger.info("Result $tweetInTwitters")
+        logger.info("TweetInTwitters ${tweetInTwitters.map { it.id }}")
         tweetInTwitters.forEach { tweetInTwitter ->
             if (tweetInTwitter.id > (user.lastTweetId ?: 0)) {
                 logger.info("New tweet from $username id = ${tweetInTwitter.id}")
@@ -84,6 +85,7 @@ class TwitterCronJob(
     fun updateLikeForUsername(username: String, user: TwitterUser) {
         logger.info("Update like twitter account $username")
         val tweetInTwittersDirty = twitterService.lastLikeByUsername(username)
+        logger.info("TweetInTwittersDirty ${tweetInTwittersDirty.map { it.id }}")
         val tweetInTwitters = mutableListOf<Tweet>()
 
         val tweetInTwitter = tweetInTwittersDirty.firstOrNull { it.id == user.lastLikeId }
@@ -94,7 +96,7 @@ class TwitterCronJob(
             val index = tweetInTwittersDirty.indexOf(tweetInTwitter)
             tweetInTwitters.addAll(tweetInTwittersDirty.subList(0, index))
         }
-        logger.info("Result $tweetInTwitters")
+        logger.info("TweetInTwitters ${tweetInTwitters.map { it.id }}")
         tweetInTwitters.forEach { tweetInTwitter ->
             if (tweetInTwitter.id != user.lastLikeId) {
                 logger.info("New like from $username id = $tweetInTwitter.id")

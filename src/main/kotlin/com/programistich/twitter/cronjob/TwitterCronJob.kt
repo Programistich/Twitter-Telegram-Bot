@@ -6,6 +6,8 @@ import com.programistich.twitter.service.db.DefaultDatabaseTelegramChatService
 import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService
 import com.programistich.twitter.service.telegram.DefaultTelegramExecutorService
 import com.programistich.twitter.service.twitter.TwitterService
+import com.programistich.twitter.template.Template
+import com.programistich.twitter.template.TemplateReader
 import com.programistich.twitter.utils.TypeCommand
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -19,7 +21,8 @@ class TwitterCronJob(
     private val defaultDatabaseTwitterUserService: DefaultDatabaseTwitterUserService,
     private val twitterService: TwitterService,
     private val telegramExecutorService: DefaultTelegramExecutorService,
-    private val cache: TweetCache
+    private val cache: TweetCache,
+    private val template: TemplateReader,
 ) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -60,11 +63,23 @@ class TwitterCronJob(
                 logger.info("Update username = $username")
                 val internalTweet = twitterService.parseInternalTweet(tweetInTwitter.id) ?: return
                 cache.add(tweetInTwitter)
-                user.chats.map {
-                    if (it.isChannel && tweetInTwitter.retweetId != null) return
+                user.chats.map { chat ->
+                    if (chat.isChannel && tweetInTwitter.retweetId != null) return
                     else {
-                        logger.info("Send tweet to ${it.chatId}")
-                        telegramExecutorService.sendTweetEntryPoint(internalTweet, it.chatId)
+                        logger.info("Send tweet to ${chat.chatId}")
+                        kotlin.runCatching {
+                            telegramExecutorService.sendTweetEntryPoint(internalTweet, chat.chatId)
+                        }.onFailure {
+                            val link = twitterService.parseTweetForTelegram(tweetInTwitter.id).url
+                            val text = template.getTemplate(
+                                template = Template.ERROR,
+                                values = arrayOf(link)
+                            )
+                            telegramExecutorService.sendTextMessage(
+                                chatId = chat.chatId,
+                                text = text
+                            )
+                        }
                     }
                 }
             }

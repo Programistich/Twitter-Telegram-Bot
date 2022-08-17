@@ -49,7 +49,6 @@ class TwitterService(
     fun parseInternalTweet(tweetId: Long): InternalTweet? {
         return try {
             val tweet = cache.get(tweetId) ?: twitter.getTweets(tweetId).tweets[0]
-            cache.add(tweet)
             val nextId = tweet.newId()
             InternalTweet(
                 nextTweet = nextId?.let { parseInternalTweet(it) },

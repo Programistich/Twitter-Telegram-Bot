@@ -1,5 +1,6 @@
 package com.programistich.twitter.cronjob
 
+import com.programistich.twitter.cache.TweetCache
 import com.programistich.twitter.entity.TwitterUser
 import com.programistich.twitter.service.db.DefaultDatabaseTelegramChatService
 import com.programistich.twitter.service.db.DefaultDatabaseTwitterUserService
@@ -16,9 +17,9 @@ import java.util.concurrent.TimeUnit
 @Service
 class TwitterCronJob(
     private val defaultDatabaseTwitterUserService: DefaultDatabaseTwitterUserService,
-    private val databaseTelegramChatService: DefaultDatabaseTelegramChatService,
     private val twitterService: TwitterService,
-    private val telegramExecutorService: DefaultTelegramExecutorService
+    private val telegramExecutorService: DefaultTelegramExecutorService,
+    private val cache: TweetCache
 ) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -51,25 +52,14 @@ class TwitterCronJob(
     fun updateTweetForUsername(username: String, user: TwitterUser) {
         logger.info("Update tweet twitter account $username")
         val tweetInTwittersDirty = twitterService.lastTweetByUsername(username)
-        logger.info("TweetInTwittersDirty ${tweetInTwittersDirty.map { it.id }}")
-        val tweetInTwitters = mutableListOf<Tweet>()
-
-        val tweetInTwitter = tweetInTwittersDirty.firstOrNull { it.id == user.lastTweetId }
-        if (user.lastTweetId == 0L || user.lastTweetId == null) {
-            tweetInTwitters.add(tweetInTwittersDirty.first())
-        }
-        else if (tweetInTwitter == null) { tweetInTwitters.addAll(tweetInTwittersDirty) } else {
-            val index = tweetInTwittersDirty.indexOf(tweetInTwitter)
-            tweetInTwitters.addAll(tweetInTwittersDirty.subList(0, index))
-        }
-        logger.info("TweetInTwitters ${tweetInTwitters.map { it.id }}")
-        tweetInTwitters.forEach { tweetInTwitter ->
-            if (tweetInTwitter.id > (user.lastTweetId ?: 0)) {
+        tweetInTwittersDirty.forEach { tweetInTwitter ->
+            if (cache.get(tweetInTwitter.id) == null) {
                 logger.info("New tweet from $username id = ${tweetInTwitter.id}")
                 user.lastTweetId = tweetInTwitter.id
                 defaultDatabaseTwitterUserService.updateTwitterUser(user)
                 logger.info("Update username = $username")
                 val internalTweet = twitterService.parseInternalTweet(tweetInTwitter.id) ?: return
+                cache.add(tweetInTwitter)
                 user.chats.map {
                     if (it.isChannel && tweetInTwitter.retweetId != null) return
                     else {
@@ -85,25 +75,14 @@ class TwitterCronJob(
     fun updateLikeForUsername(username: String, user: TwitterUser) {
         logger.info("Update like twitter account $username")
         val tweetInTwittersDirty = twitterService.lastLikeByUsername(username)
-        logger.info("TweetInTwittersDirty ${tweetInTwittersDirty.map { it.id }}")
-        val tweetInTwitters = mutableListOf<Tweet>()
-
-        val tweetInTwitter = tweetInTwittersDirty.firstOrNull { it.id == user.lastLikeId }
-        if (user.lastLikeId == 0L || user.lastLikeId == null) {
-            tweetInTwitters.add(tweetInTwittersDirty.first())
-        }
-        else if (tweetInTwitter == null) { tweetInTwitters.addAll(tweetInTwittersDirty) } else {
-            val index = tweetInTwittersDirty.indexOf(tweetInTwitter)
-            tweetInTwitters.addAll(tweetInTwittersDirty.subList(0, index))
-        }
-        logger.info("TweetInTwitters ${tweetInTwitters.map { it.id }}")
-        tweetInTwitters.forEach { tweetInTwitter ->
-            if (tweetInTwitter.id != user.lastLikeId) {
+        tweetInTwittersDirty.forEach { tweetInTwitter ->
+            if (cache.getLike(tweetInTwitter.id) == null) {
                 logger.info("New like from $username id = $tweetInTwitter.id")
                 user.lastLikeId = tweetInTwitter.id
                 defaultDatabaseTwitterUserService.updateTwitterUser(user)
                 logger.info("Update username = $username")
                 val parsedTweet = twitterService.parseTweet(tweetInTwitter.id)
+                cache.addLike(tweetInTwitter)
                 user.chats.filter { !it.isChannel }.map {
                     logger.info("Send like tweet to ${it.chatId}")
                     val typeTweet = TypeCommand.Like(username, tweetInTwitter.id)

@@ -7,6 +7,7 @@ import twitter4j.Tweet
 class TweetCache {
     // tweetID - tweet
     private val cache: MutableMap<Long, Tweet> = hashMapOf()
+    private val likes: MutableMap<Long, Tweet> = hashMapOf()
 
     fun get(tweetId: Long): Tweet? {
         return cache[tweetId]
@@ -14,6 +15,15 @@ class TweetCache {
 
     fun add(tweet: Tweet): Long {
         cache[tweet.id] = tweet
+        return tweet.id
+    }
+
+    fun getLike(tweetId: Long): Tweet? {
+        return likes[tweetId]
+    }
+
+    fun addLike(tweet: Tweet): Long {
+        likes[tweet.id] = tweet
         return tweet.id
     }
 }

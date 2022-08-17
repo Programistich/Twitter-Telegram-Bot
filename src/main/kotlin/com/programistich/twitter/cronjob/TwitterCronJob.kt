@@ -61,26 +61,15 @@ class TwitterCronJob(
                 user.lastTweetId = tweetInTwitter.id
                 defaultDatabaseTwitterUserService.updateTwitterUser(user)
                 logger.info("Update username = $username")
-                val internalTweet = twitterService.parseInternalTweet(tweetInTwitter.id) ?: return
-                cache.add(tweetInTwitter)
-                user.chats.map { chat ->
-                    if (chat.isChannel && tweetInTwitter.retweetId != null) return
-                    else {
-                        logger.info("Send tweet to ${chat.chatId}")
-                        kotlin.runCatching {
-                            telegramExecutorService.sendTweetEntryPoint(internalTweet, chat.chatId)
-                        }.onFailure {
-                            val link = twitterService.parseTweetForTelegram(tweetInTwitter.id).url
-                            val text = template.getTemplate(
-                                template = Template.ERROR,
-                                values = arrayOf(link)
-                            )
-                            telegramExecutorService.sendTextMessage(
-                                chatId = chat.chatId,
-                                text = text
-                            )
-                        }
+                kotlin.runCatching {
+                    val internalTweet = twitterService.parseInternalTweet(tweetInTwitter.id) ?: return
+                    cache.add(tweetInTwitter)
+                    user.chats.map { chat ->
+                        if (chat.isChannel && tweetInTwitter.retweetId != null) return
+                        else telegramExecutorService.sendTweetEntryPoint(internalTweet, chat.chatId)
                     }
+                }.onFailure {
+                    logger.info("Update username = $username error")
                 }
             }
         }
@@ -96,12 +85,14 @@ class TwitterCronJob(
                 user.lastLikeId = tweetInTwitter.id
                 defaultDatabaseTwitterUserService.updateTwitterUser(user)
                 logger.info("Update username = $username")
-                val parsedTweet = twitterService.parseTweet(tweetInTwitter.id)
-                cache.addLike(tweetInTwitter)
-                user.chats.filter { !it.isChannel }.map {
-                    logger.info("Send like tweet to ${it.chatId}")
-                    val typeTweet = TypeCommand.Like(username, tweetInTwitter.id)
-                    telegramExecutorService.sendTweet(it.chatId, parsedTweet, typeTweet)
+                kotlin.runCatching {
+                    val parsedTweet = twitterService.parseTweet(tweetInTwitter.id)
+                    cache.addLike(tweetInTwitter)
+                    user.chats.filter { !it.isChannel }.map {
+                        logger.info("Send like tweet to ${it.chatId}")
+                        val typeTweet = TypeCommand.Like(username, tweetInTwitter.id)
+                        telegramExecutorService.sendTweet(it.chatId, parsedTweet, typeTweet)
+                    }
                 }
             }
         }

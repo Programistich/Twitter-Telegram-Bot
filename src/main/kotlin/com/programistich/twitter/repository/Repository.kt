@@ -43,6 +43,25 @@ class Repository(
         }
     }
 
+    fun removeTwitterAccount(chatId: String, username: String): Boolean {
+        val currentChat = telegramRepository.findById(chatId).orElseThrow()
+        val twitterAccounts = currentChat.twitterUsers.firstOrNull { it.username == username }
+        return if (twitterAccounts == null) false
+        else {
+            val chats = twitterAccounts.chats
+            chats.remove(currentChat)
+            twitterRepository.save(
+                TwitterUser(
+                    username = username,
+                    lastTweetId = twitterAccounts.lastTweetId,
+                    lastLikeId = twitterAccounts.lastLikeId,
+                    chats = chats
+                )
+            )
+            true
+        }
+    }
+
     fun getTwitterAccountByUsername(username: String): TwitterUser? {
         return twitterRepository.findById(username).orElse(null)
     }

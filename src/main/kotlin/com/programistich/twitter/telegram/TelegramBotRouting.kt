@@ -20,12 +20,13 @@ class TelegramBotRouting(
         if(message == null) return
         if (command != null) {
             val textCommand = message.split(" ")[0]
-            val messageWithoutCommand = message.replace(textCommand, "").trim()
+            val messageWithoutCommand = message.replace(textCommand, "").trim().removePrefix("@")
             when (command) {
                 TelegramBotCommand.START -> telegramBotService.startCommand(update)
                 TelegramBotCommand.HELP -> telegramBotService.helpCommand(update)
                 TelegramBotCommand.PING -> telegramBotService.pingCommand(update)
                 TelegramBotCommand.DONATE -> telegramBotService.donateCommand(update)
+                TelegramBotCommand.REMOVE -> telegramBotService.removeCommand(update, messageWithoutCommand)
                 TelegramBotCommand.ADD -> {
                     telegramBotService.addTwitterAccountCommand(
                         update = update,
@@ -43,6 +44,7 @@ class TelegramBotRouting(
             isTweet(message) { tweetId ->
                 telegramBotService.getTweetCommand(update = update, tweetId = tweetId)
             }
+            update
         }
     }
 

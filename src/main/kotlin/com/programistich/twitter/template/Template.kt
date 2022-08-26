@@ -7,6 +7,7 @@ enum class Template {
     DONATE,
     ACCOUNT_GOOD,
     ACCOUNT_EXIST,
+    ACCOUNT_REMOVE,
     ACCOUNT_NOT_FOUND,
     TWEET_NOT_FOUND,
     TWEET_EXIST,

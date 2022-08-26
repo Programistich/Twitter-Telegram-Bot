@@ -71,6 +71,27 @@ class TelegramBotService(
         )
     }
 
+    fun removeCommand(update: Update, username: String) {
+        val chatId = update.id()
+        val removeUser = repository.removeTwitterAccount(chatId, username)
+        if (removeUser) {
+            val text = template.getTemplate(template = Template.ACCOUNT_REMOVE, values = arrayOf(username))
+            if (!update.hasChannelPost()) {
+                bot.sendTextMessage(chatId = chatId, text = text)
+            } else {
+                bot.deleteMessage(chatId, update.channelPost.messageId)
+            }
+        }
+        else {
+            val text = template.getTemplate(template = Template.ACCOUNT_NOT_FOUND, values = arrayOf(username))
+            if (!update.hasChannelPost()) {
+                bot.sendTextMessage(chatId = chatId, text = text)
+            } else {
+                bot.deleteMessage(chatId, update.channelPost.messageId)
+            }
+        }
+    }
+
     fun addTwitterAccountCommand(update: Update, username: String) {
         val chatId = update.id()
         logger.info("Add command by $chatId")

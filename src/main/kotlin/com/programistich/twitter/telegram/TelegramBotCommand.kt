@@ -3,6 +3,7 @@ package com.programistich.twitter.telegram
 enum class TelegramBotCommand(val value: String) {
     START("/start"),
     ADD("/add"),
+    REMOVE("/remove"),
     GET("/get"),
     DONATE("/donate"),
     HELP("/help"),
